@@ -1,2 +1,2 @@
 # OSCPC
-Open Sourced Chemical Engineering Process SImulator
+Open Sourced Chemical Engineering Process Simulator
