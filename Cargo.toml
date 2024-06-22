@@ -1,6 +1,6 @@
-[package]
-name = "oscps"
-version = "0.1.0"
-edition = "2021"
+[workspace]
 
-[dependencies]
+members = [
+    "oscps-lib",
+    "oscps-gui/src-tauri",
+    ]
