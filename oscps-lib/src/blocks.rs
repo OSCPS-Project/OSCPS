@@ -1,9 +1,9 @@
-
+use crate::component;
 use crate::connector;
 
 trait MassBal {
     fn overall_mass_bal_calc() {}
-    fn comp_mass_bal_calc(cmp: Component) {}
+    fn comp_mass_bal_calc(cmp: component::Chemical) {}
 }
 
 trait EnergyBal{
