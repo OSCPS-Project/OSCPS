@@ -1,5 +1,5 @@
 pub struct Chemical {
-    comp_id: String,
+    comp_id: String, //this will be the PubChem No.
     iupac_name: String,
     chemical_formula: String,
     properties: chem_properties
