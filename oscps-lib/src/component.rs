@@ -1,7 +1,11 @@
 //! # Component
 
+extern crate uom;
+
+use uom::si::f64::ThermodynamicTemperature;
+
 /// A struct to store information regarding the chemical properties of a particular substance.
-pub struct Chemical {
+struct Chemical {
     /// The (PubChem)[https://pubchem.ncbi.nlm.nih.gov/] CID of a compound.
     component_id: u64,
     /// The IUPAC name of a compound
@@ -17,14 +21,6 @@ impl Chemical {
     ///
     /// TODO: Finish this documentation comment
     ///
-    /// # Example
-    /// ```
-    /// // First create a ChemicalProperties struct
-    /// using oscps::ChemicalProperties;
-    /// using oscps::Chemical;
-    /// let water_chemical_propertes = ChemicalProperties::new(273.15, 373.15);
-    /// let water = Chemical::new(962, "oxidane", "H2O", water_chemical-properties);
-    /// ```
     pub fn new(component_id: u64, iupac_name: &str, chemical_formula: &str, properties: ChemicalProperties) -> Chemical {
         Chemical {
             component_id,
@@ -42,23 +38,35 @@ impl Chemical {
 /// boiling point, heat capacity, solubility, and many other properites.
 struct ChemicalProperties {
     /// The melting point of a substance at atmospheric pressure in Kelvin
-    normal_melting_point: f64,
+    normal_melting_point: ThermodynamicTemperature,
     /// The normal boiling point of a substance at atmospheric pressure in Kelvin
-    normal_boiling_point: f64,
+    normal_boiling_point: ThermodynamicTemperature,
 }
 
 impl ChemicalProperties {
     /// Create a ChemicalProperties struct
     ///
-    /// # Examples
-    /// ```
-    /// use oscps::ChemicalProperties;
-    /// let water_chemical_propertes = ChemicalProperties::new(273.15, 373.15)
-    /// ``` 
-    pub fn new(normal_melting_point: f64, normal_boiling_point: f64) -> ChemicalProperties {
+    pub fn new(
+        normal_melting_point: ThermodynamicTemperature,
+        normal_boiling_point: ThermodynamicTemperature
+        ) -> ChemicalProperties {
         ChemicalProperties {
             normal_melting_point,
             normal_boiling_point,
         }
     }
+}
+
+use std::io;
+use uom::si::thermodynamic_temperature::kelvin;
+
+#[test]
+fn test_chemical_properties_constructor() -> io::Result<()> {
+    // Test using water
+    let water_melting_point = ThermodynamicTemperature::new::<kelvin>(273.15);
+    let water_boiling_point = ThermodynamicTemperature::new::<kelvin>(373.15);
+    let water_properties = ChemicalProperties::new(water_melting_point, water_boiling_point);
+    assert_eq!(water_properties.normal_melting_point, water_melting_point);
+    assert_eq!(water_properties.normal_boiling_point, water_boiling_point);
+    Ok(()) 
 }
