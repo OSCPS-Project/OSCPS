@@ -60,12 +60,14 @@ mod block_tests {
     use std::io;
     
     #[test]
-    fn mass_balance_check_mixer_blk() {
-
+    fn mass_balance_check_mixer_blk() -> io::Result<()> {
+        // here you will need to check that the mass into the mixer = mass out of mixer
+        return Ok(());
     }
 
     #[test]
-    fn energy_balance_check_mixer_blk() {
-
+    fn energy_balance_check_mixer_blk() -> io::Result<()> {
+        // energy into mixer = energy out of mixer
+        return Ok(())
     }
 }
