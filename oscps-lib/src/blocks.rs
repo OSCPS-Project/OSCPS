@@ -52,3 +52,20 @@ impl MassBalance for Mixer {
 impl EnergyBalance for Mixer {
     // Implement energy balance methods specific to Mixer here.
 }
+
+
+#[cfg(test)]
+mod block_tests {
+    use super::*;
+    use std::io;
+    
+    #[test]
+    fn mass_balance_check_mixer_blk() {
+
+    }
+
+    #[test]
+    fn energy_balance_check_mixer_blk() {
+
+    }
+}
