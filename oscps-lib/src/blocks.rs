@@ -68,6 +68,6 @@ mod block_tests {
     #[test]
     fn energy_balance_check_mixer_blk() -> io::Result<()> {
         // energy into mixer = energy out of mixer
-        return Ok(())
+        return Ok(());
     }
 }
