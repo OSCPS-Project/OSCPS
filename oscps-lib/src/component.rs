@@ -57,16 +57,20 @@ impl ChemicalProperties {
     }
 }
 
-use std::io;
-use uom::si::thermodynamic_temperature::kelvin;
+#[cfg(test)]
+mod component_tests {
+    use super::*;
+    use std::io;
+    use uom::si::thermodynamic_temperature::kelvin;
 
-#[test]
-fn test_chemical_properties_constructor() -> io::Result<()> {
-    // Test using water
-    let water_melting_point = ThermodynamicTemperature::new::<kelvin>(273.15);
-    let water_boiling_point = ThermodynamicTemperature::new::<kelvin>(373.15);
-    let water_properties = ChemicalProperties::new(water_melting_point, water_boiling_point);
-    assert_eq!(water_properties.normal_melting_point, water_melting_point);
-    assert_eq!(water_properties.normal_boiling_point, water_boiling_point);
-    Ok(()) 
+    #[test]
+    fn test_chemical_properties_constructor() -> io::Result<()> {
+        // Test using water
+        let water_melting_point = ThermodynamicTemperature::new::<kelvin>(273.15);
+        let water_boiling_point = ThermodynamicTemperature::new::<kelvin>(373.15);
+        let water_properties = ChemicalProperties::new(water_melting_point, water_boiling_point);
+        assert_eq!(water_properties.normal_melting_point, water_melting_point);
+        assert_eq!(water_properties.normal_boiling_point, water_boiling_point);
+        Ok(()) 
+    }
 }
