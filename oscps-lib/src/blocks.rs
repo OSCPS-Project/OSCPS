@@ -7,13 +7,21 @@
 //! MassBalance trait but not the EnergyBalance.
 //!
 
+
+use uom::si::f64::{Energy, Ratio};
+use uom::si::energy::joule;
 use crate::connector;
+use once_cell::sync::Lazy;
+
+//Initiallizing a global variable for the tolerance for the energy balance
+static TOLERENCE_ENERGY: Lazy<Energy> = Lazy::new(|| Energy::new::<joule>(5.0));
 
 /// Trait for ensuring the overall mass balance is maintained in a flowsheet.
 ///
 /// This trait can be implemented by any block that needs to ensure mass conservation.
 trait MassBalance {
-    fn overall_mass_balance() {}
+    // total mass in - total mass out < tolerance
+    fn mass_balance_check() {}
 }
 
 /// # EnergyBalance
@@ -22,7 +30,22 @@ trait MassBalance {
 ///
 /// This is useful for distinguishing between "dynamic" and "steady state" simulations.
 trait EnergyBalance {
-    fn energy_balance() {}
+
+    // total energy in - total energy out < tolerance
+    fn energy_balance_check(&self, energy_in : Energy, energy_out : Energy) -> bool {
+        // Convert both energy_in and energy_out to joules
+        let energy_in_joules = energy_in.get::<joule>();
+        let energy_out_joules = energy_out.get::<joule>();
+
+        // Calculate the difference between energy_in and energy_out in joules
+        let energy_difference = energy_in_joules - energy_out_joules;
+
+        // Check if the energy difference is less than the global threshold
+        let within_threshold = energy_difference < TOLERENCE_ENERGY.get::<joule>();
+
+        return within_threshold;
+
+    }
 }
 
 /// # ElementBalance (also known as Atomic Balance)
@@ -30,8 +53,8 @@ trait EnergyBalance {
 /// This trait ensures atomic conservation, especially relevant in reactor simulations.
 ///
 /// Similar to the EnergyBalance trait, this is useful for determining the nature of the simulation (dynamic or steady state).
-trait ElementBalance {
-    fn element_balance() {}
+pub trait ElementBalance {
+    fn element_balance_check() {}
 }
 
 /// # Mixer Block
@@ -41,8 +64,8 @@ trait ElementBalance {
 /// This struct requires the implementation of both EnergyBalance and MassBalance traits to ensure proper conservation principles are followed.
 pub struct Mixer {
     pub block_id: String,
-    pub input_stream: Vec<connector::Mconnector>,
-    pub output_stream: connector::Mconnector,
+    //pub input_stream: Vec<connector::Mconnector>,
+    //pub output_stream: connector::Mconnector,
 }
 
 impl MassBalance for Mixer {
@@ -58,6 +81,8 @@ impl EnergyBalance for Mixer {
 mod block_tests {
     use super::*;
     use std::io;
+    use uom::si::f64::Energy;
+    use uom::si::energy::joule;
     
     #[test]
     fn mass_balance_check_mixer_blk() -> io::Result<()> {
@@ -66,8 +91,13 @@ mod block_tests {
     }
 
     #[test]
-    fn energy_balance_check_mixer_blk() -> io::Result<()> {
+    fn test_energy_balance_check_within_threshold_for_mixer() {
         // energy into mixer = energy out of mixer
-        return Ok(());
+        let mixer_test_obj = Mixer{
+            block_id : String::from("Test Mixer")
+        };
+        let energy_in = Energy::new::<joule>(10.0);
+        let energy_out = Energy::new::<joule>(95.0);
+        assert!(mixer_test_obj.energy_balance_check(energy_in, energy_out));
     }
 }
