@@ -8,7 +8,9 @@
 //!
 
 
-use uom::si::f64::{Energy, Ratio};
+use uom::si::f64::{Energy};
+use uom::si::f64::{Mass};
+use uom::si::mass::kilogram;
 use uom::si::energy::joule;
 use crate::connector;
 use once_cell::sync::Lazy;
@@ -16,12 +18,21 @@ use once_cell::sync::Lazy;
 //Initiallizing a global variable for the tolerance for the energy balance
 static TOLERENCE_ENERGY: Lazy<Energy> = Lazy::new(|| Energy::new::<joule>(5.0));
 
+static TOLERENCE_MASS: Lazy<Mass> = Lazy::new(|| Mass::new::<kilogram>(5.0));
+
 /// Trait for ensuring the overall mass balance is maintained in a flowsheet.
 ///
 /// This trait can be implemented by any block that needs to ensure mass conservation.
-trait MassBalance {
+pub trait MassBalance {
     // total mass in - total mass out < tolerance
-    fn mass_balance_check() {}
+    fn mass_balance_check(&self, mass_in : Mass, mass_out : Mass) -> bool {
+        let mass_in_kg = mass_in.get::<kilogram>();
+        let mass_out_kg = mass_out.get::<kilogram>();
+
+        let mass_difference = mass_in_kg - mass_out_kg;
+
+        return mass_difference <= TOLERENCE_MASS.get::<kilogram>();
+    }
 }
 
 /// # EnergyBalance
@@ -41,7 +52,7 @@ trait EnergyBalance {
         let energy_difference = energy_in_joules - energy_out_joules;
 
         // Check if the energy difference is less than the global threshold
-        let within_threshold = energy_difference < TOLERENCE_ENERGY.get::<joule>();
+        let within_threshold = energy_difference <= TOLERENCE_ENERGY.get::<joule>();
 
         return within_threshold;
 
@@ -85,13 +96,19 @@ mod block_tests {
     use uom::si::energy::joule;
     
     #[test]
-    fn mass_balance_check_mixer_blk() -> io::Result<()> {
+    fn test_mass_balance_check_steady_state_for_mixer() {
         // here you will need to check that the mass into the mixer = mass out of mixer
-        return Ok(());
+        
+        let mixer_test_obj = Mixer{
+            block_id : String::from("Test Mixer")
+        };
+        let mass_in = Mass::new::<kilogram>(100.0);
+        let mass_out = Mass::new::<kilogram>(95.0);
+        assert!(mixer_test_obj.mass_balance_check(mass_in, mass_out));
     }
 
     #[test]
-    fn test_energy_balance_check_within_threshold_for_mixer() {
+    fn test_energy_balance_check_steady_state_for_mixer() {
         // energy into mixer = energy out of mixer
         let mixer_test_obj = Mixer{
             block_id : String::from("Test Mixer")
