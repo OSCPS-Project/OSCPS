@@ -18,6 +18,7 @@ use once_cell::sync::Lazy;
 //Initiallizing a global variable for the tolerance for the energy balance
 static TOLERENCE_ENERGY: Lazy<Energy> = Lazy::new(|| Energy::new::<joule>(5.0));
 
+//Initiallizing a global variable for the tolerance for the mass balance
 static TOLERENCE_MASS: Lazy<Mass> = Lazy::new(|| Mass::new::<kilogram>(5.0));
 
 /// Trait for ensuring the overall mass balance is maintained in a flowsheet.
