@@ -94,7 +94,8 @@ mod block_tests {
     use super::*;
     use std::io;
     use uom::si::f64::Energy;
-    use uom::si::energy::joule;
+    use uom::si::energy::kilojoule;
+    use uom::si::mass::pound;
     
     #[test]
     fn test_mass_balance_check_steady_state_for_mixer() {
@@ -103,8 +104,8 @@ mod block_tests {
         let mixer_test_obj = Mixer{
             block_id : String::from("Test Mixer")
         };
-        let mass_in = Mass::new::<kilogram>(100.0);
-        let mass_out = Mass::new::<kilogram>(95.0);
+        let mass_in = Mass::new::<pound>(100.0);
+        let mass_out = Mass::new::<pound>(95.0);
         assert!(mixer_test_obj.mass_balance_check(mass_in, mass_out));
     }
 
@@ -114,8 +115,8 @@ mod block_tests {
         let mixer_test_obj = Mixer{
             block_id : String::from("Test Mixer")
         };
-        let energy_in = Energy::new::<joule>(10.0);
-        let energy_out = Energy::new::<joule>(95.0);
+        let energy_in = Energy::new::<kilojoule>(10.0);
+        let energy_out = Energy::new::<kilojoule>(95.0);
         assert!(mixer_test_obj.energy_balance_check(energy_in, energy_out));
     }
 }
