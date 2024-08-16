@@ -21,6 +21,8 @@ static TOLERENCE_ENERGY: Lazy<Energy> = Lazy::new(|| Energy::new::<joule>(5.0));
 //Initiallizing a global variable for the tolerance for the mass balance
 static TOLERENCE_MASS: Lazy<Mass> = Lazy::new(|| Mass::new::<kilogram>(5.0));
 
+//Initiallizing a global variable for the tolerance for the element balance
+
 /// Trait for ensuring the overall mass balance is maintained in a flowsheet.
 ///
 /// This trait can be implemented by any block that needs to ensure mass conservation.
@@ -41,7 +43,7 @@ pub trait MassBalance {
 /// This trait ensures that blocks in the flowsheet adhere to energy conservation principles.
 ///
 /// This is useful for distinguishing between "dynamic" and "steady state" simulations.
-trait EnergyBalance {
+pub trait EnergyBalance {
 
     // total energy in - total energy out < tolerance
     fn energy_balance_check(&self, energy_in : Energy, energy_out : Energy) -> bool {
@@ -66,7 +68,9 @@ trait EnergyBalance {
 ///
 /// Similar to the EnergyBalance trait, this is useful for determining the nature of the simulation (dynamic or steady state).
 pub trait ElementBalance {
-    fn element_balance_check() {}
+    fn element_balance_check() {
+
+    }
 }
 
 /// # Mixer Block
