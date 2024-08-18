@@ -12,7 +12,7 @@ use uom::si::f64::{Energy};
 use uom::si::f64::{Mass};
 use uom::si::mass::kilogram;
 use uom::si::energy::joule;
-use crate::connector;
+use crate::{component, connector};
 use once_cell::sync::Lazy;
 
 //Initiallizing a global variable for the tolerance for the energy balance
@@ -68,7 +68,7 @@ pub trait EnergyBalance {
 ///
 /// Similar to the EnergyBalance trait, this is useful for determining the nature of the simulation (dynamic or steady state).
 pub trait ElementBalance {
-    fn element_balance_check() {
+    fn element_balance_check(id : component::ChemicalIdentifier) {
 
     }
 }

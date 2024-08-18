@@ -4,7 +4,7 @@ extern crate uom;
 extern crate pubchem;
 
 /// This will hold the list of chemicals used within the simulation
-struct ChemicalList {
+pub struct ChemicalList {
     chemical_list : Vec<pubchem::Compound>
 }
 
@@ -20,7 +20,7 @@ impl ChemicalList{
 
 /// A struct to store information regarding the chemical properties of a particular substance.
 /// The "Chemical" struct is a wrapper for the pubchem::Compound object
-struct Chemical {
+pub struct Chemical {
     /// The (PubChem)[https://pubchem.ncbi.nlm.nih.gov/] CID of a compound.
     pubchem_obj : pubchem::Compound,
     properties : pubchem::model::rest::Properties
@@ -28,7 +28,7 @@ struct Chemical {
 
 /// This enum will be used by the "Chemical" struct to create the pubchem::Compound obj based on
 /// either the chemical name or the pubchem id of the chemical
-enum ChemicalIdentifier {
+pub enum ChemicalIdentifier {
     PubchemID(u32),
     CompoundName(String),
 }
