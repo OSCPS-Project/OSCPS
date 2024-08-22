@@ -12,6 +12,7 @@ use uom::si::f64::{Energy};
 use uom::si::f64::{Mass};
 use uom::si::mass::kilogram;
 use uom::si::energy::joule;
+use crate::component::ChemicalIdentifier;
 use crate::{component, connector};
 use once_cell::sync::Lazy;
 
@@ -68,8 +69,11 @@ pub trait EnergyBalance {
 ///
 /// Similar to the EnergyBalance trait, this is useful for determining the nature of the simulation (dynamic or steady state).
 pub trait ElementBalance {
-    fn element_balance_check(id : component::ChemicalIdentifier) {
-
+    fn element_balance_check(elem_in : Vec<ChemicalIdentifier>, elem_out : Vec<ChemicalIdentifier>) -> bool {
+        // need to run a for loop that will will perform the balance on each of the elements going
+        // into and out of the block
+        
+        return false;
     }
 }
 
@@ -84,13 +88,11 @@ pub struct Mixer {
     //pub output_stream: connector::Mconnector,
 }
 
-impl MassBalance for Mixer {
-    // Implement mass balance methods specific to Mixer here.
-}
+// Implement mass balance methods specific to Mixer here.
+impl MassBalance for Mixer {}
 
-impl EnergyBalance for Mixer {
-    // Implement energy balance methods specific to Mixer here.
-}
+// Implement energy balance methods specific to Mixer here.
+impl EnergyBalance for Mixer {}
 
 
 #[cfg(test)]
