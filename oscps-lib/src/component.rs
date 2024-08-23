@@ -53,9 +53,22 @@ impl Chemical {
         };
     }
 
-    pub fn get_pubchem_obj(&self) -> pubchem::Compound {}
+    pub fn get_pubchem_obj(&self) -> pubchem::Compound {
+        return self.pubchem_obj;
+    }
 
-    pub fn get_properties(&self) -> ChemicalProperties {}
+    pub fn get_properties(&self) -> ChemicalProperties {
+        return self.properties;
+    }
+}
+
+impl Clone for Chemical {
+    fn clone(&self) -> Chemical {
+        return Chemical {
+            pubchem_obj : self.pubchem_obj,
+            properties : self.properties
+        }
+    }
 }
 
 struct ChemicalProperties {
