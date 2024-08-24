@@ -12,7 +12,8 @@ use uom::si::f64::{Energy};
 use uom::si::f64::{Mass};
 use uom::si::mass::kilogram;
 use uom::si::energy::joule;
-use crate::connector;
+use crate::component::ChemicalIdentifier;
+use crate::{component, connector};
 use once_cell::sync::Lazy;
 
 //Initiallizing a global variable for the tolerance for the energy balance
@@ -20,6 +21,8 @@ static TOLERENCE_ENERGY: Lazy<Energy> = Lazy::new(|| Energy::new::<joule>(5.0));
 
 //Initiallizing a global variable for the tolerance for the mass balance
 static TOLERENCE_MASS: Lazy<Mass> = Lazy::new(|| Mass::new::<kilogram>(5.0));
+
+//Initiallizing a global variable for the tolerance for the element balance
 
 /// Trait for ensuring the overall mass balance is maintained in a flowsheet.
 ///
@@ -41,7 +44,7 @@ pub trait MassBalance {
 /// This trait ensures that blocks in the flowsheet adhere to energy conservation principles.
 ///
 /// This is useful for distinguishing between "dynamic" and "steady state" simulations.
-trait EnergyBalance {
+pub trait EnergyBalance {
 
     // total energy in - total energy out < tolerance
     fn energy_balance_check(&self, energy_in : Energy, energy_out : Energy) -> bool {
@@ -66,7 +69,12 @@ trait EnergyBalance {
 ///
 /// Similar to the EnergyBalance trait, this is useful for determining the nature of the simulation (dynamic or steady state).
 pub trait ElementBalance {
-    fn element_balance_check() {}
+    fn element_balance_check(elem_in : Vec<ChemicalIdentifier>, elem_out : Vec<ChemicalIdentifier>) -> bool {
+        // need to run a for loop that will will perform the balance on each of the elements going
+        // into and out of the block
+        
+        return false;
+    }
 }
 
 /// # Mixer Block
@@ -80,13 +88,11 @@ pub struct Mixer {
     //pub output_stream: connector::Mconnector,
 }
 
-impl MassBalance for Mixer {
-    // Implement mass balance methods specific to Mixer here.
-}
+// Implement mass balance methods specific to Mixer here.
+impl MassBalance for Mixer {}
 
-impl EnergyBalance for Mixer {
-    // Implement energy balance methods specific to Mixer here.
-}
+// Implement energy balance methods specific to Mixer here.
+impl EnergyBalance for Mixer {}
 
 
 #[cfg(test)]
