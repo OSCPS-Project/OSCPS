@@ -15,21 +15,21 @@ pub struct ChemicalList {
 }
 
 
-impl ChemicalList{
-    /// constructor that will hold the list of compounds being used in simulation
-    pub fn new() -> ChemicalList {
-        return ChemicalList {
-            chemical_list : Vec::<pubchem::Compound>::new()
-        };
-    }
-}
+// impl ChemicalList{
+//     /// constructor that will hold the list of compounds being used in simulation
+//     pub fn new() -> ChemicalList {
+//         return ChemicalList {
+//             chemical_list : Vec::<pubchem::Compound>::new()
+//         };
+//     }
+// }
 
 /// A struct to store information regarding the chemical properties of a particular substance.
 /// The "Chemical" struct is a wrapper for the pubchem::Compound object
 pub struct Chemical {
     /// The (PubChem)[https://pubchem.ncbi.nlm.nih.gov/] CID of a compound.
-    pubchem_obj : pubchem::Compound,
-    properties : ChemicalProperties
+    pub pubchem_obj : pubchem::Compound,
+    pub properties : ChemicalProperties
 }
 
 /// This enum will be used by the "Chemical" struct to create the pubchem::Compound obj based on
@@ -127,30 +127,42 @@ impl ChemicalProperties {
 
 #[cfg(test)]
 mod component_tests {
-    use super::*;
-    use std::io;
-    use pubchem;
-    use uom::si::mass::gram;
-    use uom::si::f64::{Mass};
     
-    // #[test]
-    // fn test_chemical_properties_constructor() -> io::Result<()> {
-    //     // Test using water (assuming 1 mole)
-    //     let water_mass_one_mole = Mass::new::<gram>(18.02);
-    //     let water_chemical_obj = Chemical::new(ChemicalIdentifier::PubchemID(962));
-    //     let water_mass_from_obj = (water_chemical_obj.properties.exact_mass.unwrap().parse().expect("Invalid Number"));
-    //     let water_mass_from_obj_uom = Mass::new::<gram>(water_mass_from_obj);
+    use super::*;
+    use tokio;
 
-    //     let diff = water_mass_from_obj_uom - water_mass_one_mole;
-    //     let abs_diff = diff.abs();
-    //     
-    //     if(abs_diff < Mass::new::<gram>(0.1))
-    //     {
-    //         return Ok(());
-    //     }
-    //     else{
-    //         Err(io::Error::new(io::ErrorKind::InvalidInput, "Mass difference is too large"))
-    //     }
-    // }
+    // Test the ChemicalProperties constructor
+    #[tokio::test]
+    async fn test_chemical_properties_new() {
+        // Replace with a valid CID for testing purposes
+        let cid = 2244;
 
+        let properties = ChemicalProperties::new(cid).await;
+
+        assert!(properties.is_ok(), "Failed to get chemical properties");
+        let properties = properties.unwrap();
+
+        assert!(properties.melting_pt.is_some(), "Melting point should be present");
+        assert!(properties.boiling_pt.is_some(), "Boiling point should be present");
+        assert!(properties.density.is_some(), "Density should be present");
+        assert!(properties.molec_mass.is_some(), "Molecular mass should be present");
+    }
+
+    // Test the Chemical constructor
+    #[tokio::test]
+    async fn test_chemical_new() {
+        // Replace with a valid PubChem ID or compound name for testing purposes
+        let identifier = ChemicalIdentifier::PubchemID(2244);
+
+        let chemical = Chemical::new(identifier).await;
+
+        assert!(chemical.is_ok(), "Failed to create chemical");
+        let chemical = chemical.unwrap();
+
+        assert!(chemical.get_pubchem_obj().cids().unwrap()[0] == 2244, "PubChem ID should match");
+        assert!(chemical.get_properties().melting_pt.is_some(), "Melting point should be present");
+        assert!(chemical.get_properties().boiling_pt.is_some(), "Boiling point should be present");
+        assert!(chemical.get_properties().density.is_some(), "Density should be present");
+        assert!(chemical.get_properties().molec_mass.is_some(), "Molecular mass should be present");
+    }
 }
