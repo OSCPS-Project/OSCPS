@@ -8,11 +8,11 @@
 //!
 
 
-use uom::si::f64::{Energy};
-use uom::si::f64::{Mass};
+use uom::si::f64::Energy;
+use uom::si::f64::Mass;
 use uom::si::mass::kilogram;
 use uom::si::energy::joule;
-use crate::connector;
+// use crate::connector;
 use once_cell::sync::Lazy;
 
 //Initiallizing a global variable for the tolerance for the energy balance
@@ -78,6 +78,17 @@ pub struct Mixer {
     pub block_id: String,
     //pub input_stream: Vec<connector::Mconnector>,
     //pub output_stream: connector::Mconnector,
+}
+
+///  # Mixer constructor
+/// Create a mixer by passsing constructor arguments.
+///
+impl Mixer {
+    pub fn new<S: Into<String>>(block_id: S) -> Self {
+        Mixer {
+            block_id: block_id.into(),
+        }
+    }
 }
 
 impl MassBalance for Mixer {

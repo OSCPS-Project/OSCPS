@@ -4,4 +4,10 @@ resolver = "2"
 members = [
     "oscps-lib",
     "oscps-gui/src-tauri",
+    "oscps-cli",
     ]
+
+# [[bin]]
+# name = "oscps-cli"
+# path = "./oscps-cli/src/main.rs"
+    

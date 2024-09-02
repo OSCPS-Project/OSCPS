@@ -1,4 +1,4 @@
-mod blocks;
+pub mod blocks;
 mod connector;
 mod component;
 mod simulation;
