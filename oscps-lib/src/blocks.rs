@@ -70,9 +70,14 @@ pub trait EnergyBalance {
 /// 
 /// This struct requires the implementation of both EnergyBalance and MassBalance traits to ensure proper conservation principles are followed.
 pub struct Mixer {
-    pub block_id: String,
-    pub input_stream: Vec<connector::Mconnector>,
-    pub output_stream: Option<connector::Mconnector>,
+    pub block_id : String,
+    pub x_cord : i32,
+    pub y_cord : i32,
+    pub input_streams_mass : Vec<connector::Mconnector>,
+    pub input_streams_energy : Vec<connector::Econnector>,
+    pub outlet_stream_energy : Option<connector::Econnector>, 
+    pub outlet_stream_mass: Option<connector::Mconnector>,
+    
 }
 
 // Applying mass balance trait to Mixer Block
@@ -82,11 +87,15 @@ impl MassBalance for Mixer {}
 impl EnergyBalance for Mixer {}
 
 impl Mixer {
-    pub fn new(id : String, in_streams : Vec<connector::Mconnector>) -> Mixer {
+    pub fn new(id : String, x_cord : i32, y_cord : i32, in_streams_mass : Vec<connector::Mconnector>, in_streams_energy : Vec<connector::Econnector>) -> Mixer {
         return Mixer {
             block_id : id,
-            input_stream : in_streams,
-            output_stream : None
+            x_cord : x_cord,
+            y_cord : y_cord,
+            input_streams_mass : in_streams_mass,
+            input_streams_energy : in_streams_energy,
+            outlet_stream_mass : None,
+            outlet_stream_energy : None
         };
     }
 
@@ -94,23 +103,31 @@ impl Mixer {
         return false;
     }
 
-    fn compute_mass_flows(&self) {
+    fn compute_inlet_mass_flows(&self) {
         
     }
 
-    fn compute_energy_flows(&self) {
+    fn compute_outlet_mass_flows(&self) {
 
     }
 
-    fn compute_phase_fractions(&self) {
+    fn compute_inlet_energy_flows(&self) {
 
     }
 
-    fn compute_overall_temperature(&self) {
+    fn compute_outlet_energy_flows(&self) {
 
     }
 
-    fn compute_overall_pressure(&self) {
+    fn compute_outlet_phase_fractions(&self) {
+
+    }
+
+    fn compute_outlet_temperature(&self) {
+
+    }
+
+    fn compute_outlet_pressure(&self) {
 
     }
 
@@ -130,10 +147,14 @@ mod block_tests {
     fn test_mass_balance_check_steady_state_for_mixer() {
         // here you will need to check that the mass into the mixer = mass out of mixer
         
-        let mixer_test_obj = Mixer{
+        let mixer_test_obj = Mixer {
             block_id : String::from("Test Mixer"),
-            input_stream : Vec::new(),
-            output_stream : Some(Mconnector::new(String::from("1")))
+            x_cord : 0,
+            y_cord : 0,
+            input_streams_mass : Vec::new(),
+            input_streams_energy : Vec::new(),
+            outlet_stream_mass : None,
+            outlet_stream_energy : None
         };
         let mass_in = Mass::new::<pound>(100.0);
         let mass_out = Mass::new::<pound>(95.0);
@@ -143,10 +164,14 @@ mod block_tests {
     #[test]
     fn test_energy_balance_check_steady_state_for_mixer() {
         // energy into mixer = energy out of mixer
-        let mixer_test_obj = Mixer{
+        let mixer_test_obj = Mixer {
             block_id : String::from("Test Mixer"),
-            input_stream : Vec::new(),
-            output_stream : Some( Mconnector::new(String::from("1")) )
+            x_cord : 0,
+            y_cord : 0,
+            input_streams_mass : Vec::new(),
+            input_streams_energy : Vec::new(),
+            outlet_stream_mass : None,
+            outlet_stream_energy : None
         };
         let energy_in = Energy::new::<kilojoule>(10.0);
         let energy_out = Energy::new::<kilojoule>(95.0);
