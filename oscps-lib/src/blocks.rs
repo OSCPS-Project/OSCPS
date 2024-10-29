@@ -84,19 +84,38 @@ pub trait ElementBalance {
 /// This struct requires the implementation of both EnergyBalance and MassBalance traits to ensure proper conservation principles are followed.
 pub struct Mixer {
     pub block_id: String,
-    //pub input_stream: Vec<connector::Mconnector>,
-    //pub output_stream: connector::Mconnector,
+    pub input_stream: Vec<connector::Mconnector>,
+    pub output_stream: connector::Mconnector,
 }
 
-// Implement mass balance methods specific to Mixer here.
+// Applying mass balance trait to Mixer Block
 impl MassBalance for Mixer {}
 
-// Implement energy balance methods specific to Mixer here.
+// Applying the energy balance trait to the Mixer Block
 impl EnergyBalance for Mixer {}
 
+impl Mixer {
+    pub fn compute_flow_out () {
+
+    }
+
+    fn compute_phase_fractions() {
+
+    }
+
+    fn temperature_out() {
+
+    }
+
+    fn pressure_out() {
+
+    }
+}
 
 #[cfg(test)]
 mod block_tests {
+    use crate::connector::Mconnector;
+
     use super::*;
     use std::io;
     use uom::si::f64::Energy;
@@ -108,7 +127,9 @@ mod block_tests {
         // here you will need to check that the mass into the mixer = mass out of mixer
         
         let mixer_test_obj = Mixer{
-            block_id : String::from("Test Mixer")
+            block_id : String::from("Test Mixer"),
+            input_stream : Vec::new(),
+            output_stream : Mconnector::new(String::from("1"))
         };
         let mass_in = Mass::new::<pound>(100.0);
         let mass_out = Mass::new::<pound>(95.0);
@@ -119,7 +140,9 @@ mod block_tests {
     fn test_energy_balance_check_steady_state_for_mixer() {
         // energy into mixer = energy out of mixer
         let mixer_test_obj = Mixer{
-            block_id : String::from("Test Mixer")
+            block_id : String::from("Test Mixer"),
+            input_stream : Vec::new(),
+            output_stream : Mconnector::new(String::from("1"))
         };
         let energy_in = Energy::new::<kilojoule>(10.0);
         let energy_out = Energy::new::<kilojoule>(95.0);
