@@ -63,19 +63,6 @@ pub trait EnergyBalance {
     }
 }
 
-/// # ElementBalance (also known as Atomic Balance)
-///
-/// This trait ensures atomic conservation, especially relevant in reactor simulations.
-///
-/// Similar to the EnergyBalance trait, this is useful for determining the nature of the simulation (dynamic or steady state).
-pub trait ElementBalance {
-    fn element_balance_check(elem_in : Vec<ChemicalIdentifier>, elem_out : Vec<ChemicalIdentifier>) -> bool {
-        // need to run a for loop that will will perform the balance on each of the elements going
-        // into and out of the block
-        
-        return false;
-    }
-}
 
 /// # Mixer Block
 /// 
@@ -85,7 +72,7 @@ pub trait ElementBalance {
 pub struct Mixer {
     pub block_id: String,
     pub input_stream: Vec<connector::Mconnector>,
-    pub output_stream: connector::Mconnector,
+    pub output_stream: Option<connector::Mconnector>,
 }
 
 // Applying mass balance trait to Mixer Block
@@ -95,21 +82,38 @@ impl MassBalance for Mixer {}
 impl EnergyBalance for Mixer {}
 
 impl Mixer {
-    pub fn compute_flow_out () {
+    pub fn new(id : String, in_streams : Vec<connector::Mconnector>) -> Mixer {
+        return Mixer {
+            block_id : id,
+            input_stream : in_streams,
+            output_stream : None
+        };
+    }
+
+    pub fn execute_block(&self) -> bool {
+        return false;
+    }
+
+    fn compute_mass_flows(&self) {
+        
+    }
+
+    fn compute_energy_flows(&self) {
 
     }
 
-    fn compute_phase_fractions() {
+    fn compute_phase_fractions(&self) {
 
     }
 
-    fn temperature_out() {
+    fn compute_overall_temperature(&self) {
 
     }
 
-    fn pressure_out() {
+    fn compute_overall_pressure(&self) {
 
     }
+
 }
 
 #[cfg(test)]
@@ -129,7 +133,7 @@ mod block_tests {
         let mixer_test_obj = Mixer{
             block_id : String::from("Test Mixer"),
             input_stream : Vec::new(),
-            output_stream : Mconnector::new(String::from("1"))
+            output_stream : Some(Mconnector::new(String::from("1")))
         };
         let mass_in = Mass::new::<pound>(100.0);
         let mass_out = Mass::new::<pound>(95.0);
@@ -142,7 +146,7 @@ mod block_tests {
         let mixer_test_obj = Mixer{
             block_id : String::from("Test Mixer"),
             input_stream : Vec::new(),
-            output_stream : Mconnector::new(String::from("1"))
+            output_stream : Some( Mconnector::new(String::from("1")) )
         };
         let energy_in = Energy::new::<kilojoule>(10.0);
         let energy_out = Energy::new::<kilojoule>(95.0);
