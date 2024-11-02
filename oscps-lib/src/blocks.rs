@@ -102,9 +102,19 @@ impl Mixer {
     pub fn execute_block(&self) -> bool {
         return false;
     }
-
+    
+    /// This private method will compute the outlet mass flows for the mixer block
+    /// 
+    /// # Returns
+    /// 
+    /// A Mass quantity (uom object) that holds the outlet mass flow
     fn compute_inlet_mass_flows(&self) {
+       // steps to implement function:
+        // Need to loop through each of the connector structures and add up the mass flows
+            // During this process, need to make sure that all the mass flows are in the same units
+            // Use the UOM package to help with this part...
         
+
     }
 
     fn compute_outlet_mass_flows(&self) {
