@@ -2,75 +2,85 @@
 
 extern crate uom;
 
-use uom::si::f64::ThermodynamicTemperature;
+extern crate pubchem;
+use anyhow::Result;
+
+/// This will hold the list of chemicals used within the simulation
+pub struct ChemicalList {
+    chemical_list : Vec<pubchem::Compound>
+}
+
+
 
 /// A struct to store information regarding the chemical properties of a particular substance.
-struct Chemical {
+/// The "Chemical" struct is a wrapper for the pubchem::Compound object
+pub struct Chemical {
     /// The (PubChem)[https://pubchem.ncbi.nlm.nih.gov/] CID of a compound.
-    component_id: u64,
-    /// The IUPAC name of a compound
-    iupac_name: String,
-    /// The chemical formula of a compound
-    chemical_formula: String,
-    /// The chemical properties of a compound
-    properties: ChemicalProperties
+    pub pubchem_obj : pubchem::Compound,
+    pub properties : ChemicalProperties
+}
+
+/// This enum will be used by the "Chemical" struct to create the pubchem::Compound obj based on
+/// either the chemical name or the pubchem id of the chemical
+pub enum ChemicalIdentifier {
+    PubchemID(u32),
+    CompoundName(String),
 }
 
 impl Chemical {
-    /// Create a Chemical struct
-    ///
-    /// TODO: Finish this documentation comment
-    ///
-    pub fn new(component_id: u64, iupac_name: &str, chemical_formula: &str, properties: ChemicalProperties) -> Chemical {
-        Chemical {
-            component_id,
-            iupac_name: iupac_name.to_string(),
-            chemical_formula: chemical_formula.to_string(),
-            properties: properties,
-        }
+
+    /// constructor
+    pub async fn new(identifier : ChemicalIdentifier) -> Result<Self> {
+        let pubchem_chemical_object = match identifier {
+            ChemicalIdentifier::PubchemID(id) => pubchem::Compound::new(id),
+            ChemicalIdentifier::CompoundName(name) => pubchem::Compound::with_name(name.as_str()),
+        };
+
+        let cid_vec = pubchem_chemical_object.cids().unwrap();
+
+        let cid : i32 = cid_vec[0];
+
+        //getting the properties of the chemical
+        let prop = ChemicalProperties::new(cid).await?;
+
+        return Ok(Chemical {
+            pubchem_obj : pubchem_chemical_object,
+            properties : prop
+        });
+    }
+    /// returns the pubchem object for the compound
+    pub fn get_pubchem_obj(&self) -> &pubchem::Compound {
+        return &self.pubchem_obj;
+    }
+
+    /// returns the "ChemicalProperties" object for the "Chemical" object 
+    pub fn get_properties(&self) -> &ChemicalProperties {
+        return &self.properties;
     }
 }
 
-/// A struct for storing chemical properties of a chemical.
-///
-/// This struct allows OSCPS access to the data needed to predict the various
-/// physical properties of a substance using thermodynamic correlations, including melting and
-/// boiling point, heat capacity, solubility, and many other properites.
 struct ChemicalProperties {
-    /// The melting point of a substance at atmospheric pressure in Kelvin
-    normal_melting_point: ThermodynamicTemperature,
-    /// The normal boiling point of a substance at atmospheric pressure in Kelvin
-    normal_boiling_point: ThermodynamicTemperature,
+    pub melting_pt : Option<uom::si::f64::ThermodynamicTemperature>,
+    pub boiling_pt : Option<uom::si::f64::ThermodynamicTemperature>,
+    pub density : Option<uom::si::f64::MassDensity>,
+    pub molec_mass : Option<uom::si::f64::Mass>
 }
 
 impl ChemicalProperties {
-    /// Create a ChemicalProperties struct
-    ///
-    pub fn new(
-        normal_melting_point: ThermodynamicTemperature,
-        normal_boiling_point: ThermodynamicTemperature
-        ) -> ChemicalProperties {
-        ChemicalProperties {
-            normal_melting_point,
-            normal_boiling_point,
-        }
+    pub async fn new(cid : i32) -> Result<Self> {
+        println!("Recieving information for compound/element {cid}");
+        return Ok(ChemicalProperties {
+                    melting_pt: None,
+                    boiling_pt: None,
+                    density: None,
+                    molec_mass: None,
+                    });
     }
+
 }
+
 
 #[cfg(test)]
 mod component_tests {
-    use super::*;
-    use std::io;
-    use uom::si::thermodynamic_temperature::kelvin;
-
-    #[test]
-    fn test_chemical_properties_constructor() -> io::Result<()> {
-        // Test using water
-        let water_melting_point = ThermodynamicTemperature::new::<kelvin>(273.15);
-        let water_boiling_point = ThermodynamicTemperature::new::<kelvin>(373.15);
-        let water_properties = ChemicalProperties::new(water_melting_point, water_boiling_point);
-        assert_eq!(water_properties.normal_melting_point, water_melting_point);
-        assert_eq!(water_properties.normal_boiling_point, water_boiling_point);
-        Ok(()) 
-    }
+    
 }
