@@ -9,6 +9,9 @@ use uom::si::thermodynamic_temperature::kelvin;
 use uom::si::pressure::pascal;
 use crate::component::Chemical;
 
+
+
+
 pub struct ThermoState {
     pub pressure: Pressure,                // Pressure in Pascals
     pub temperature: ThermodynamicTemperature, // Temperature in Kelvin
@@ -52,6 +55,11 @@ impl ThermoState {
             0.0 => None,
             _ => Some(component_mass / total_mass),
         }
+    }
+
+    fn ideal_gas_pressure(&self, n: f64, t: f64, v: f64) -> f64 {
+        const R: f64 = 8.314; // J/(mol·K)
+        (n * R * t) / v
     }
 }
 
