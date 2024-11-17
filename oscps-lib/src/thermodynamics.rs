@@ -3,16 +3,21 @@
 //! This module will hold all the functions related to calculating themrodynamic properties for the
 //! blocks and chemical species.
 
-use uom::si::f64::*; // Use f64 as the underlying type for units
+use uom::si::f64::*; use uom::si::mass::kilogram;
+// Use f64 as the underlying type for units
 use uom::si::thermodynamic_temperature::kelvin;
 use uom::si::pressure::pascal;
-use uom::si::amount_of_substance::mole;
-use std::collections::HashMap;
+use crate::component::Chemical;
 
-struct ThermoState {
-    pressure: Pressure,                // Pressure in Pascals
-    temperature: ThermodynamicTemperature, // Temperature in Kelvin
-    mole_fractions: Vec<AmountOfSubstance>, // Mole fractions, typically unitless
+pub struct ThermoState {
+    pub pressure: Pressure,                // Pressure in Pascals
+    pub temperature: ThermodynamicTemperature, // Temperature in Kelvin
+    pub mass_list: Vec<SpeciesListPair>, // Mole fractions, typically unitless
+}
+
+pub struct SpeciesListPair {
+    pub chemical_species : Chemical,
+    pub mass_quantity : Mass  
 }
 
 impl ThermoState {
@@ -20,15 +25,32 @@ impl ThermoState {
     pub fn new(
         pressure: f64,      // in Pascals
         temperature: f64,   // in Kelvin
-        mole_fractions: Vec<f64>,
+        mass_list: Vec<SpeciesListPair>,
     ) -> Self {
         ThermoState {
             pressure: Pressure::new::<pascal>(pressure),
             temperature: ThermodynamicTemperature::new::<kelvin>(temperature),
-            mole_fractions: mole_fractions
-                .into_iter()
-                .map(AmountOfSubstance::new::<mole>)
-                .collect(),
+            mass_list : mass_list
+        }
+    }
+
+    pub fn mass_frac(&self, species: &Chemical) -> Option<f64> {
+        let mut total_mass = 0.0;
+        let mut component_mass = 0.0;
+        
+        for chem in &self.mass_list {
+            total_mass += chem.mass_quantity.get::<kilogram>();
+            
+            if let Some(cids) = Some(chem.chemical_species.pubchem_obj.cids().unwrap()[0]) {
+                if cids == species.pubchem_obj.cids().unwrap_or_default()[0] {
+                    component_mass = chem.mass_quantity.get::<kilogram>();
+                }
+            }
+        }
+
+        match component_mass {
+            0.0 => None,
+            _ => Some(component_mass / total_mass),
         }
     }
 }
@@ -39,84 +61,88 @@ mod thermo_tests {
     use super::*;
     use uom::si::pressure::pascal;
     use uom::si::thermodynamic_temperature::kelvin;
-    use uom::si::amount_of_substance::mole;
+    use uom::si::mass::kilogram;
+    use crate::component::{Chemical, ChemicalProperties};
+    
+    #[tokio::test]
+    async fn test_create_thermo_state() {
+        // Create some test data for ThermoMoleFrac (mole fractions)
+        let water = Chemical {
+            pubchem_obj: pubchem::Compound::new(962),
+            properties: ChemicalProperties {
+                molar_mass: 0.01801528, // kg/mol for water
+                critical_temp: 647.1,   // K
+                critical_pressure: 2206.0, // Pa
+                acentric_factor: 0.344, // example
+            },
+        };
+        let water_mass = Mass::new::<kilogram>(2.0);
+        let water_species_pair = SpeciesListPair {
+            chemical_species: water,
+            mass_quantity: water_mass,
+        };
 
-    #[test]
-    fn test_thermostate_initialization() {
-        // Create a ThermoState instance
-        let state = ThermoState::new(
-            101_325.0,  // Pressure in Pa
-            298.15,     // Temperature in K
-            vec![0.5, 0.5], // Mole fractions
+        // Create ThermoState
+        let thermo_state = ThermoState::new(
+            101325.0, // pressure in Pascals (1 atm)
+            298.15,   // temperature in Kelvin (25°C)
+            vec![water_species_pair], // Example with one chemical
         );
 
-        // Assert pressure
-        assert_eq!(
-            state.pressure.get::<pascal>(),
-            101_325.0,
-            "Pressure should match the input value"
-        );
+        // Validate ThermoState
+        assert_eq!(thermo_state.pressure.get::<pascal>(), 101325.0);
+        assert_eq!(thermo_state.temperature.get::<kelvin>(), 298.15);
+        assert_eq!(thermo_state.mass_list.len(), 1); // Should contain one mole fraction entry
 
-        // Assert temperature
-        assert_eq!(
-            state.temperature.get::<kelvin>(),
-            298.15,
-            "Temperature should match the input value"
-        );
-
-        // Assert mole fractions
-        assert_eq!(
-            state.mole_fractions.len(),
-            2,
-            "Mole fractions should have the correct number of components"
-        );
-        assert!(
-            (state.mole_fractions[0].get::<mole>() - 0.5).abs() < 1e-12,
-            "First mole fraction should match the input value"
-        );
+        // Check that the mole fraction's chemical is correctly set
+        assert_eq!(thermo_state.mass_list[0].chemical_species.get_pubchem_obj().cids().unwrap()[0], 962);
     }
 
-    #[test]
-    fn test_unit_conversions() {
-        // Create a ThermoState instance
-        let state = ThermoState::new(
-            101_325.0,  // Pressure in Pa
-            273.15,     // Temperature in K
-            vec![1.0],  // Mole fraction
+    #[tokio::test]
+    async fn test_mass_fraction_calculation() {
+        let water = Chemical {
+            pubchem_obj: pubchem::Compound::new(962),
+            properties: ChemicalProperties {
+                molar_mass: 0.01801528, // kg/mol for water
+                critical_temp: 647.1,   // K
+                critical_pressure: 2206.0, // Pa
+                acentric_factor: 0.344, // example
+            },
+        };
+
+        let Anisdine = Chemical {
+            pubchem_obj : pubchem::Compound::new(7732),
+            properties : ChemicalProperties {
+                molar_mass: 123.155, // g/mol, converting to kg/mol = 123.155 / 1000
+                critical_temp: 592.0, // K (approximated)
+                critical_pressure: 2.6e6, // Pa (approximated)
+                acentric_factor: 0.24,  // (approximated)
+            }
+        };
+
+        let water_mass = Mass::new::<kilogram>(2.0);
+        let water_species_pair = SpeciesListPair {
+            chemical_species: water,
+            mass_quantity: water_mass,
+        };
+
+        let anisidine_mass = Mass::new::<kilogram>(8.0);
+        let anisidine_species_pair = SpeciesListPair {
+            chemical_species : Anisdine,
+            mass_quantity : anisidine_mass
+        };
+
+        let therm_obj = ThermoState::new(
+            101325.0,
+            298.15, 
+            vec![water_species_pair, anisidine_species_pair]
         );
 
-        // Convert pressure to bar
-        let pressure_in_bar = state.pressure.get::<uom::si::pressure::bar>();
-        assert!(
-            (pressure_in_bar - 1.01325).abs() < 1e-5,
-            "Pressure in bar should be approximately 1.01325"
-        );
+        let mass_fraction = therm_obj.mass_frac(&therm_obj.mass_list[0].chemical_species).unwrap();
 
-        // Convert temperature to Celsius
-        let temp_in_celsius = state.temperature.get::<uom::si::thermodynamic_temperature::degree_celsius>();
-        assert!(
-            (temp_in_celsius - 0.0).abs() < 1e-12,
-            "Temperature in Celsius should be 0.0"
-        );
-    }
 
-    #[test]
-    fn test_invalid_mole_fractions() {
-        // Test with mole fractions that don't sum to 1
-        let state = ThermoState::new(
-            101_325.0,  // Pressure in Pa
-            298.15,     // Temperature in K
-            vec![0.6, 0.3], // Mole fractions
-        );
 
-        let mole_fraction_sum: f64 = state.mole_fractions
-            .iter()
-            .map(|m| m.get::<mole>())
-            .sum();
 
-        assert!(
-            (mole_fraction_sum - 0.9).abs() < 1e-12,
-            "Mole fraction sum should match the input values"
-        );
+        assert!((mass_fraction - 0.2).abs() < 1e-6, "Mole fraction calculation failed"); // Should be 0.2
     }
 }

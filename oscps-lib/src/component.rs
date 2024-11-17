@@ -40,6 +40,7 @@ impl Chemical {
 
         let cid : i32 = cid_vec[0];
 
+
         //getting the properties of the chemical
         let prop = ChemicalProperties::new(cid).await?;
 
@@ -59,11 +60,11 @@ impl Chemical {
     }
 }
 
-struct ChemicalProperties {
-    molar_mass: f64,    // kg/mol
-    critical_temp: f64, // K
-    critical_pressure: f64, // Pa
-    acentric_factor: f64,
+pub struct ChemicalProperties {
+    pub molar_mass: f64,    // kg/mol
+    pub critical_temp: f64, // K
+    pub critical_pressure: f64, // Pa
+    pub acentric_factor: f64,
 }
 
 impl ChemicalProperties {
@@ -82,5 +83,45 @@ impl ChemicalProperties {
 
 #[cfg(test)]
 mod component_tests {
-    
+    use crate::component::{Chemical,ChemicalIdentifier};
+    use std::io;
+
+    #[tokio::test]
+    async fn test_create_chemical_from_pubchem_id() {
+        // Using a known PubChem ID, e.g., 7732 (water)
+        let identifier = ChemicalIdentifier::PubchemID(7732); 
+
+        let chemical = Chemical::new(identifier).await;
+
+        assert!(chemical.is_ok(), "Failed to create chemical from PubChem ID");
+        let chemical = chemical.unwrap();
+
+        // Verify that the Chemical object contains the expected PubChem object
+        assert_eq!(chemical.get_pubchem_obj().cids().unwrap()[0], 7732);
+
+        // Optionally, verify that the ChemicalProperties object has been initialized
+        // assert_eq!(chemical.get_properties().molar_mass, 0.0); // Example check for default values
+    }
+
+
+    #[tokio::test]
+    async fn test_create_chemical_from_name() {
+        let identifier = ChemicalIdentifier::CompoundName(String::from("Water")); 
+
+        let chemical = Chemical::new(identifier).await;
+        let cid_value = pubchem::Compound::with_name("Water").cids().unwrap()[0];
+
+        println!(stringify!(cid_value));
+
+
+        assert!(chemical.is_ok(), "Failed to create chemical from name");
+        let chemical = chemical.unwrap();
+
+        // Verify that the Chemical object contains a valid name
+        assert_eq!(chemical.get_pubchem_obj().cids().unwrap()[0], cid_value);
+        assert_eq!(chemical.pubchem_obj.title().unwrap(), "Water");
+        // assert_eq!(chemical.get_properties().molar_mass, 0.0); // Example check for default values
+    }
+
+
 }
