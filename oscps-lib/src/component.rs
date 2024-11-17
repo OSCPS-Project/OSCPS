@@ -60,20 +60,20 @@ impl Chemical {
 }
 
 struct ChemicalProperties {
-    pub melting_pt : Option<uom::si::f64::ThermodynamicTemperature>,
-    pub boiling_pt : Option<uom::si::f64::ThermodynamicTemperature>,
-    pub density : Option<uom::si::f64::MassDensity>,
-    pub molec_mass : Option<uom::si::f64::Mass>
+    molar_mass: f64,    // kg/mol
+    critical_temp: f64, // K
+    critical_pressure: f64, // Pa
+    acentric_factor: f64,
 }
 
 impl ChemicalProperties {
     pub async fn new(cid : i32) -> Result<Self> {
         println!("Recieving information for compound/element {cid}");
         return Ok(ChemicalProperties {
-                    melting_pt: None,
-                    boiling_pt: None,
-                    density: None,
-                    molec_mass: None,
+                    molar_mass: 0.0,    // kg/mol
+                    critical_temp: 0.0, // K
+                    critical_pressure: 0.0, // Pa
+                    acentric_factor: 0.0,
                     });
     }
 
