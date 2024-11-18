@@ -1,0 +1,25 @@
+name: Check Documentation
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  check-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Rust
+        uses: actions/setup-rust@v1
+        with:
+          rust-version: stable
+
+      - name: Install doc-check
+        run: cargo install cargo-doc-check
+
+      - name: Check Documentation
+        run: cargo doc-check
