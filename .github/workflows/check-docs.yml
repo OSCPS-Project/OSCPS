@@ -5,12 +5,6 @@ on:
     branches:
       - main
       - develop
-  pull_request:
-    branches:
-      - main
-      - develop
-  release:
-    types: [published]
 
 jobs:
   check-docs:
@@ -19,12 +13,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Rust
-        uses: actions/setup-rust@v1
-        with:
-          rust-version: stable
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+          source $HOME/.cargo/env
 
-      - name: Install doc-check
+      - name: Install cargo-doc-check
         run: cargo install cargo-doc-check
 
       - name: Check Documentation
