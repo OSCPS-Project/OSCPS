@@ -82,7 +82,7 @@ impl ChemicalProperties {
 
 
 #[cfg(test)]
-mod component_tests {
+mod chemical_species_tests {
     use crate::component::{Chemical,ChemicalIdentifier};
     use std::io;
 
