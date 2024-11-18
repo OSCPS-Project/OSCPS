@@ -3,14 +3,46 @@
 //! This module will hold all the functions related to calculating themrodynamic properties for the
 //! blocks and chemical species.
 
-use uom::si::f64::*; use uom::si::mass::kilogram;
-// Use f64 as the underlying type for units
+// use uom::si::f32::{Pressure, ThermodynamicTemperature};
+use uom::si::f64::*; 
+use uom::si::mass::kilogram;
 use uom::si::thermodynamic_temperature::kelvin;
 use uom::si::pressure::pascal;
 use crate::component::Chemical;
 
+pub enum ThermodynamicConstants {
+    UniversalGasConstant, // R
+    StandardTemperature,  // T_0
+    StandardPressure,     // P_0
+    AvogadroNumber,       // N_A
+}
 
+/// Enum for representing different types of thermodynamic constant values
+pub enum ConstantValue {
+    Pressure(Pressure),
+    Temperature(ThermodynamicTemperature),
+    Dimensionless(f64),
+}
 
+impl ThermodynamicConstants {
+    /// Returns the value of the thermodynamic constant with its appropriate type.
+    pub fn value(&self) -> ConstantValue {
+        match self {
+            ThermodynamicConstants::UniversalGasConstant => {
+                ConstantValue::Pressure(Pressure::new::<pascal>(8.314462618))
+            }
+            ThermodynamicConstants::StandardTemperature => {
+                ConstantValue::Temperature(ThermodynamicTemperature::new::<kelvin>(273.15))
+            }
+            ThermodynamicConstants::StandardPressure => {
+                ConstantValue::Pressure(Pressure::new::<pascal>(101_325.0))
+            }
+            ThermodynamicConstants::AvogadroNumber => {
+                ConstantValue::Dimensionless(6.02214076e23)
+            }
+        }
+    }
+}
 
 pub struct ThermoState {
     pub pressure: Pressure,                // Pressure in Pascals
