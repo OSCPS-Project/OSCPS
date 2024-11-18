@@ -30,7 +30,7 @@ pub enum ChemicalIdentifier {
 impl Chemical {
 
     /// constructor
-    pub async fn new(identifier : ChemicalIdentifier) -> Result<Self> {
+    pub fn new(identifier : ChemicalIdentifier) -> Result<Self> {
         let pubchem_chemical_object = match identifier {
             ChemicalIdentifier::PubchemID(id) => pubchem::Compound::new(id),
             ChemicalIdentifier::CompoundName(name) => pubchem::Compound::with_name(name.as_str()),
@@ -42,7 +42,7 @@ impl Chemical {
 
 
         //getting the properties of the chemical
-        let prop = ChemicalProperties::new(cid).await?;
+        let prop = ChemicalProperties::new(cid).unwrap();
 
         return Ok(Chemical {
             pubchem_obj : pubchem_chemical_object,
@@ -68,7 +68,7 @@ pub struct ChemicalProperties {
 }
 
 impl ChemicalProperties {
-    pub async fn new(cid : i32) -> Result<Self> {
+    pub fn new(cid : i32) -> Result<Self> {
         println!("Recieving information for compound/element {cid}");
         return Ok(ChemicalProperties {
                     molar_mass: 0.0,    // kg/mol
@@ -86,12 +86,12 @@ mod component_tests {
     use crate::component::{Chemical,ChemicalIdentifier};
     use std::io;
 
-    #[tokio::test]
-    async fn test_create_chemical_from_pubchem_id() {
+    #[test]
+    fn test_create_chemical_from_pubchem_id() {
         // Using a known PubChem ID, e.g., 7732 (water)
         let identifier = ChemicalIdentifier::PubchemID(7732); 
 
-        let chemical = Chemical::new(identifier).await;
+        let chemical = Chemical::new(identifier);
 
         assert!(chemical.is_ok(), "Failed to create chemical from PubChem ID");
         let chemical = chemical.unwrap();
@@ -104,11 +104,11 @@ mod component_tests {
     }
 
 
-    #[tokio::test]
-    async fn test_create_chemical_from_name() {
+    #[test]
+    fn test_create_chemical_from_name() {
         let identifier = ChemicalIdentifier::CompoundName(String::from("Water")); 
 
-        let chemical = Chemical::new(identifier).await;
+        let chemical = Chemical::new(identifier);
         let cid_value = pubchem::Compound::with_name("Water").cids().unwrap()[0];
 
         println!(stringify!(cid_value));
