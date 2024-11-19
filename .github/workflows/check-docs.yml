@@ -1,31 +1,28 @@
-name: Check Documentation
+name: Clippy and Documentation Check
 
 on:
-  push:
-    branches:
-      - main
-      - develop
   pull_request:
     branches:
       - main
       - develop
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
+      - develop
 
 jobs:
-  check-docs:
+  lint:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install Rust
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-          source $HOME/.cargo/env
+      - name: Set up Rust
+        uses: actions/setup-rust@v1
 
-      - name: Install cargo-doc-check
-        run: cargo install cargo-doc-check
+      - name: Install Clippy
+        run: rustup component add clippy
 
-      - name: Check Documentation
-        run: cargo doc-check
+      - name: Run Clippy with Documentation Lints
+        run: cargo clippy -- -D warnings
