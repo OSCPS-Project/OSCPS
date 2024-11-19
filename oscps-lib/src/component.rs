@@ -109,16 +109,12 @@ mod chemical_species_tests {
         let identifier = ChemicalIdentifier::CompoundName(String::from("Water")); 
 
         let chemical = Chemical::new(identifier);
-        let cid_value = pubchem::Compound::with_name("Water").cids().unwrap()[0];
-
-        println!(stringify!(cid_value));
-
 
         assert!(chemical.is_ok(), "Failed to create chemical from name");
         let chemical = chemical.unwrap();
 
         // Verify that the Chemical object contains a valid name
-        assert_eq!(chemical.get_pubchem_obj().cids().unwrap()[0], cid_value);
+        assert_eq!(chemical.get_pubchem_obj().cids().unwrap()[0], 962);
         assert_eq!(chemical.pubchem_obj.title().unwrap(), "Water");
         // assert_eq!(chemical.get_properties().molar_mass, 0.0); // Example check for default values
     }
