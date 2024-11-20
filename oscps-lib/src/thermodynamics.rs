@@ -104,8 +104,8 @@ mod thermo_tests {
     use uom::si::mass::kilogram;
     use crate::component::{Chemical, ChemicalProperties};
     
-    #[tokio::test]
-    async fn test_create_thermo_state() {
+    #[test]
+    fn test_create_thermo_state() {
         // Create some test data for ThermoMoleFrac (mole fractions)
         let water = Chemical {
             pubchem_obj: pubchem::Compound::new(962),
@@ -138,8 +138,8 @@ mod thermo_tests {
         assert_eq!(thermo_state.mass_list[0].chemical_species.get_pubchem_obj().cids().unwrap()[0], 962);
     }
 
-    #[tokio::test]
-    async fn test_mass_fraction_calculation() {
+    #[test]
+    fn test_mass_fraction_calculation() {
         let water = Chemical {
             pubchem_obj: pubchem::Compound::new(962),
             properties: ChemicalProperties {
@@ -186,3 +186,5 @@ mod thermo_tests {
         assert!((mass_fraction - 0.2).abs() < 1e-6, "Mole fraction calculation failed"); // Should be 0.2
     }
 }
+
+
