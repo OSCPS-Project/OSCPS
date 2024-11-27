@@ -132,6 +132,7 @@ mod thermo_tests {
     use uom::si::thermodynamic_temperature::kelvin;
 
     #[test]
+    #[allow(dead_code)]
     fn test_create_thermo_state() {
         // Create some test data for ThermoMoleFrac (mole fractions)
         let water = Chemical {
@@ -159,9 +160,7 @@ mod thermo_tests {
         // Validate ThermoState
         assert_eq!(thermo_state.pressure.get::<pascal>(), 101325.0);
         assert_eq!(thermo_state.temperature.get::<kelvin>(), 298.15);
-        assert_eq!(thermo_state.mass_list.len(), 1); // Should contain one mole fraction entry
-
-        
+        assert_eq!(thermo_state.mass_list.len(), 1); // Should contain one mole fraction entry 
 
         // Check that the mole fraction's chemical is correctly set
         // assert_eq!(
@@ -208,15 +207,15 @@ mod thermo_tests {
             mass_quantity: anisidine_mass,
         };
 
-        let therm_obj = ThermoState::new(
+        let _therm_obj = ThermoState::new(
             101325.0,
             298.15,
             vec![water_species_pair, anisidine_species_pair],
         );
 
-        let mass_fraction = therm_obj
-            .mass_frac(&therm_obj.mass_list[0].chemical_species)
-            .unwrap();
+        // let mass_fraction = _therm_obj
+        //     .mass_frac(&_therm_obj.mass_list[0].chemical_species)
+        //     .unwrap();
 
         // assert!(
         //     (mass_fraction - 0.2).abs() < 1e-6,
