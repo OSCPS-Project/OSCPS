@@ -3,5 +3,4 @@ resolver = "2"
 
 members = [
     "oscps-lib",
-    "oscps-gui/src-tauri",
     ]
