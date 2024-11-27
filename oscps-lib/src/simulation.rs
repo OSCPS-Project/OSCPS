@@ -1,17 +1,21 @@
+//! # Simulation
+//!
+//! Allows for the construction of a simulation object. TODO: Implement this.
+
 // use std::collections::HashMap;
 
-    // fn compute_outlet_phase_fractions(&self) {
+// fn compute_outlet_phase_fractions(&self) {
 
-    // }
+// }
 
-    // fn compute_outlet_temperature(&self) {
+// fn compute_outlet_temperature(&self) {
 
-    // }
+// }
 
-    // fn compute_outlet_pressure(&self) {
+// fn compute_outlet_pressure(&self) {
 
-    // }
- // #[derive(Debug, Clone)]
+// }
+// #[derive(Debug, Clone)]
 // struct Settings {
 //     // Add fields as needed
 // }
@@ -76,5 +80,3 @@
 //         }
 //         Ok(())
 //     }
-
-
