@@ -1,19 +1,18 @@
 //! # Component
-
 extern crate uom;
 
 extern crate pubchem;
 use anyhow::Result;
 
 /// This will hold the list of chemicals used within the simulation
+#[allow(dead_code)]
 pub struct ChemicalList {
     chemical_list : Vec<pubchem::Compound>
 }
 
-
-
 /// A struct to store information regarding the chemical properties of a particular substance.
 /// The "Chemical" struct is a wrapper for the pubchem::Compound object
+#[allow(dead_code)]
 pub struct Chemical {
     /// The (PubChem)[https://pubchem.ncbi.nlm.nih.gov/] CID of a compound.
     pub pubchem_obj : pubchem::Compound,
@@ -22,11 +21,13 @@ pub struct Chemical {
 
 /// This enum will be used by the "Chemical" struct to create the pubchem::Compound obj based on
 /// either the chemical name or the pubchem id of the chemical
+#[allow(dead_code)]
 pub enum ChemicalIdentifier {
     PubchemID(u32),
     CompoundName(String),
 }
 
+#[allow(dead_code)]
 impl Chemical {
 
     /// constructor
@@ -60,6 +61,7 @@ impl Chemical {
     }
 }
 
+#[allow(dead_code)]
 pub struct ChemicalProperties {
     pub molar_mass: f64,    // kg/mol
     pub critical_temp: f64, // K
@@ -80,11 +82,9 @@ impl ChemicalProperties {
 
 }
 
-
 #[cfg(test)]
 mod chemical_species_tests {
     use crate::component::{Chemical,ChemicalIdentifier};
-    use std::io;
 
     #[test]
     fn test_create_chemical_from_pubchem_id() {

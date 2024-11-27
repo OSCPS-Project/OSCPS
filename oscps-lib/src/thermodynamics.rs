@@ -10,6 +10,7 @@ use uom::si::thermodynamic_temperature::kelvin;
 use uom::si::pressure::pascal;
 use crate::component::Chemical;
 
+#[allow(dead_code)]
 pub enum ThermodynamicConstants {
     UniversalGasConstant, // R
     StandardTemperature,  // T_0
@@ -17,6 +18,7 @@ pub enum ThermodynamicConstants {
     AvogadroNumber,       // N_A
 }
 
+#[allow(dead_code)]
 /// Enum for representing different types of thermodynamic constant values
 pub enum ConstantValue {
     Pressure(Pressure),
@@ -24,6 +26,7 @@ pub enum ConstantValue {
     Dimensionless(f64),
 }
 
+#[allow(dead_code)]
 impl ThermodynamicConstants {
     /// Returns the value of the thermodynamic constant with its appropriate type.
     pub fn value(&self) -> ConstantValue {
@@ -44,17 +47,20 @@ impl ThermodynamicConstants {
     }
 }
 
+#[allow(dead_code)]
 pub struct ThermoState {
     pub pressure: Pressure,                // Pressure in Pascals
     pub temperature: ThermodynamicTemperature, // Temperature in Kelvin
     pub mass_list: Vec<SpeciesListPair>, // Mole fractions, typically unitless
 }
 
+#[allow(dead_code)]
 pub struct SpeciesListPair {
     pub chemical_species : Chemical,
     pub mass_quantity : Mass  
 }
 
+#[allow(dead_code)]
 impl ThermoState {
     // Constructor for creating a ThermoState
     pub fn new(
@@ -150,7 +156,7 @@ mod thermo_tests {
             },
         };
 
-        let Anisdine = Chemical {
+        let anisdine = Chemical {
             pubchem_obj : pubchem::Compound::new(7732),
             properties : ChemicalProperties {
                 molar_mass: 123.155, // g/mol, converting to kg/mol = 123.155 / 1000
@@ -168,7 +174,7 @@ mod thermo_tests {
 
         let anisidine_mass = Mass::new::<kilogram>(8.0);
         let anisidine_species_pair = SpeciesListPair {
-            chemical_species : Anisdine,
+            chemical_species : anisdine,
             mass_quantity : anisidine_mass
         };
 
