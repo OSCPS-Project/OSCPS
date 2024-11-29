@@ -14,18 +14,20 @@ use uom::si::f64::Mass;
 use uom::si::mass::kilogram;
 
 #[allow(dead_code)]
-/// Minimum error allowed for energy difference. TODO: Change this to a 
-/// relative scale instead of an absolute scale.
+/// Minimum error allowed for energy difference. 
+/// TODO: Change this to a relative scale instead of an absolute scale.
 pub static TOLERENCE_ENERGY: Lazy<Energy> = 
     Lazy::new(|| Energy::new::<joule>(5.0));
 
 #[allow(dead_code)]
-/// Minimum error allowed for mass difference. TODO: Change this to a relative
-/// scale instead of an absolute scale.
+/// Minimum error allowed for mass difference. 
+/// TODO: Change this to a relative scale instead of an absolute scale.
 pub static TOLERENCE_MASS: Lazy<Mass> = 
     Lazy::new(|| Mass::new::<kilogram>(5.0));
 
 #[allow(dead_code)]
+/// # MassBalance
+///
 /// Trait for ensuring the overall mass balance is maintained in a flowsheet.
 ///
 /// This trait can be implemented by any block that needs to ensure mass 
@@ -169,6 +171,9 @@ impl Mixer {
     fn compute_outlet_pressure(&self) {}
 }
 
+/// # Block Tests
+/// 
+/// The following module holds all the unit test cases for the blocks module
 #[cfg(test)]
 mod block_tests {
     use crate::connector::{Econnector, Mconnector};
@@ -179,6 +184,7 @@ mod block_tests {
     use uom::si::mass::pound;
 
     #[test]
+    /// checks whether the mass balance check function was implemented properly
     fn test_mass_balance_check_steady_state_for_mixer() {
         // here you will need to check that the mass into the mixer = mass out of mixer
 
@@ -197,6 +203,7 @@ mod block_tests {
     }
 
     #[test]
+    /// checks if the 'energy_balance_check' function was implemented properly
     fn test_energy_balance_check_steady_state_for_mixer() {
         // energy into mixer = energy out of mixer
         let mixer_test_obj = Mixer {
@@ -214,6 +221,7 @@ mod block_tests {
     }
 
     #[test]
+    /// checking functionality of 'compute_total_outlet_mass_flow'
     fn test_compute_total_outlet_mass_flow() {
         let in_streams_mass = vec![
             Mconnector {
@@ -231,6 +239,7 @@ mod block_tests {
     }
 
     #[test]
+    /// checking functionality of 'compute_outlet_energy_flows'
     fn test_compute_outlet_energy_flows() {
         let in_streams_energy = vec![
             Econnector {
