@@ -1,182 +1,201 @@
 //! # Blocks
 //!
-//! This file contains traits which describe the traits that will be 
-//! implemented by various structs to represent different unit operations.
+//! This file contains traits implemented by various structs to represent 
+//! different unit operations.
 //!
 //! For example, if a block is a simple mixer, then it will implement the
 //! MassBalance trait but not the EnergyBalance.
-//!
 
+use crate::connector;
+use once_cell::sync::Lazy;
+use uom::si::energy::joule;
 use uom::si::f64::Energy;
 use uom::si::f64::Mass;
 use uom::si::mass::kilogram;
-use uom::si::energy::joule;
-use crate::connector;
-use once_cell::sync::Lazy;
 
-//Initiallizing a global variable for the tolerance for the energy balance
 #[allow(dead_code)]
-static TOLERENCE_ENERGY: Lazy<Energy> = Lazy::new(|| Energy::new::<joule>(5.0));
+/// Minimum error allowed for energy difference. 
+/// TODO: Change this to a relative scale instead of an absolute scale.
+pub static TOLERENCE_ENERGY: Lazy<Energy> = 
+    Lazy::new(|| Energy::new::<joule>(5.0));
 
-//Initiallizing a global variable for the tolerance for the mass balance
 #[allow(dead_code)]
-static TOLERENCE_MASS: Lazy<Mass> = Lazy::new(|| Mass::new::<kilogram>(5.0));
+/// Minimum error allowed for mass difference. 
+/// TODO: Change this to a relative scale instead of an absolute scale.
+pub static TOLERENCE_MASS: Lazy<Mass> = 
+    Lazy::new(|| Mass::new::<kilogram>(5.0));
 
-//Initiallizing a global variable for the tolerance for the element balance
-
+#[allow(dead_code)]
+/// # MassBalance
+///
 /// Trait for ensuring the overall mass balance is maintained in a flowsheet.
 ///
-/// This trait can be implemented by any block that needs to ensure mass conservation.
-#[allow(dead_code)]
+/// This trait can be implemented by any block that needs to ensure mass 
+/// conservation.
 pub trait MassBalance {
-    // total mass in - total mass out < tolerance
-    fn mass_balance_check(&self, mass_in : Mass, mass_out : Mass) -> bool {
+    /// Perform a mass balance check on object by comparing inlet and outlet 
+    /// mass. TODO: Compare mass flow rates, not mass and check for relative
+    /// error instead of absolute, perhaps error should be less than 1e-6
+    /// fraction of the total inlet mass. This can be an adjustable parameter.
+    /// Smaller takes longer to converge, but is more
+    fn mass_balance_check(&self, mass_in: Mass, mass_out: Mass) -> bool {
         let mass_in_kg = mass_in.get::<kilogram>();
         let mass_out_kg = mass_out.get::<kilogram>();
-
         let mass_difference = mass_in_kg - mass_out_kg;
-
         return mass_difference <= TOLERENCE_MASS.get::<kilogram>();
     }
 }
 
+#[allow(dead_code)]
 /// # EnergyBalance
 ///
-/// This trait ensures that blocks in the flowsheet adhere to energy conservation principles.
-///
-/// This is useful for distinguishing between "dynamic" and "steady state" simulations.
-#[allow(dead_code)]
+/// This trait ensures that blocks in the flowsheet adhere to energy 
+/// conservation principles.
 pub trait EnergyBalance {
-
-    // total energy in - total energy out < tolerance
-    fn energy_balance_check(&self, energy_in : Energy, energy_out : Energy) -> bool {
-        // Convert both energy_in and energy_out to joules
+    /// Perform an energy balance on a block. Checks all input and output
+    /// streams and ensures that energy stays the same. TODO: Ensure that 
+    /// energy loss is accounted for. For example, a mixer may not be entirely
+    /// adiabatic, and therefor some energy will be lost to the environment. 
+    /// Also implement changes in issue #19.
+    fn energy_balance_check(&self, energy_in: Energy, energy_out: Energy) -> 
+        bool {
         let energy_in_joules = energy_in.get::<joule>();
         let energy_out_joules = energy_out.get::<joule>();
-
-        // Calculate the difference between energy_in and energy_out in joules
         let energy_difference = energy_in_joules - energy_out_joules;
-
-        // Check if the energy difference is less than the global threshold
-        let within_threshold = energy_difference <= TOLERENCE_ENERGY.get::<joule>();
-
+        let within_threshold = energy_difference <= 
+            TOLERENCE_ENERGY.get::<joule>();
         return within_threshold;
-
     }
 }
 
-/// # Mixer Block
-/// 
-/// A block used for simple stream mixing operations.
-/// 
-/// This struct requires the implementation of both EnergyBalance and MassBalance traits to ensure proper conservation principles are followed.
 #[allow(dead_code)]
+/// # Mixer
+///
+/// A block used for simple stream mixing operations.
 pub struct Mixer {
-    pub block_id : String,
-    pub x_cord : i32,
-    pub y_cord : i32,
-    pub input_streams_mass : Vec<connector::Mconnector>,
-    pub input_streams_energy : Vec<connector::Econnector>,
-    pub outlet_stream_energy : Option<connector::Econnector>, 
+    /// The ID of the block.
+    pub block_id: String,
+    /// The x-coordiante on a flowsheet of the block.
+    pub x_cord: i32,
+    /// The y-coordinate on a flowsheet of the block.
+    pub y_cord: i32,
+    /// All mass input streams for the block.
+    pub input_streams_mass: Vec<connector::Mconnector>,
+    /// All energy input streams for the block.
+    pub input_streams_energy: Vec<connector::Econnector>,
+    /// All mass output streams for the block. 
     pub outlet_stream_mass: Option<connector::Mconnector>,
-    
+    /// All energy output streams for the block
+    pub outlet_stream_energy: Option<connector::Econnector>,
 }
 
-// Applying mass balance trait to Mixer Block
+/// Applying mass balance trait to Mixer Block
 impl MassBalance for Mixer {}
 
-// Applying the energy balance trait to the Mixer Block
+/// Applying the energy balance trait to the Mixer Block
 impl EnergyBalance for Mixer {}
 
 #[allow(dead_code)]
+/// Implementations of the mixer block.
 impl Mixer {
-    pub fn new(id : String, x_cord : i32, y_cord : i32, in_streams_mass : Vec<connector::Mconnector>, in_streams_energy : Vec<connector::Econnector>) -> Mixer {
+    /// Create a new mixer block.
+    pub fn new(
+        id: String,
+        x_cord: i32,
+        y_cord: i32,
+        in_streams_mass: Vec<connector::Mconnector>,
+        in_streams_energy: Vec<connector::Econnector>,
+    ) -> Mixer {
         return Mixer {
-            block_id : id,
+            block_id: id,
             x_cord,
             y_cord,
-            input_streams_mass : in_streams_mass,
-            input_streams_energy : in_streams_energy,
-            outlet_stream_mass : None,
-            outlet_stream_energy : None
+            input_streams_mass: in_streams_mass,
+            input_streams_energy: in_streams_energy,
+            outlet_stream_mass: None,
+            outlet_stream_energy: None,
         };
     }
 
+    /// Execute the mixer block (calculate balances, output streams, etc)
+    /// TODO: This block should calculate the new state of external connectors.
     pub fn execute_block(&mut self) {
-        
-        // Calculating total Energy and Mass leaving the system (Assuming Steady State...)
-        self.outlet_stream_mass = Some(connector::Mconnector{
-            m_conn_id : String::from("Mass_Outlet"),
-            m_flow_total : self.compute_total_outlet_mass_flow().unwrap()
+        self.outlet_stream_mass = Some(connector::Mconnector {
+            m_conn_id: String::from("Mass_Outlet"),
+            m_flow_total: self.compute_total_outlet_mass_flow().unwrap(),
         });
-        self.outlet_stream_energy = Some(connector::Econnector { e_conn_id: String::from("Energy Outlet"), energy_flow_total: self.compute_outlet_energy_flows().unwrap()}); 
+        self.outlet_stream_energy = Some(connector::Econnector {
+            e_conn_id: String::from("Energy Outlet"),
+            energy_flow_total: self.compute_outlet_energy_flows().unwrap(),
+        });
     }
-    
+
     /// This private method will compute the outlet mass flows for the mixer block
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A Mass quantity (uom object) that holds the outlet mass flow
     fn compute_total_outlet_mass_flow(&self) -> Option<f64> {
-       // TODO: steps to implement function:
+        // TODO: steps to implement function:
         // Need to loop through each of the connector structures and add up the mass flows
-            // During this process, need to make sure that all the mass flows are in the same units
-            // Use the UOM package to help with this part...
-        let mut mass_flow_sum : f64 = 0.0;
-        
+        // During this process, need to make sure that all the mass flows are in the same units
+        // Use the UOM package to help with this part...
+        let mut mass_flow_sum: f64 = 0.0;
+
         for stream in &self.input_streams_mass {
-            mass_flow_sum = mass_flow_sum + stream.m_flow_total;    
-        }        
+            mass_flow_sum = mass_flow_sum + stream.m_flow_total;
+        }
         return Some(mass_flow_sum);
     }
 
-
+    /// Determines the total energy flowing through the block
     fn compute_outlet_energy_flows(&self) -> Option<f64> {
+        let mut energy_flow_sum: f64 = 0.0;
 
-        let mut energy_flow_sum : f64 = 0.0;
-        
         for stream in &self.input_streams_energy {
-            energy_flow_sum = energy_flow_sum + stream.energy_flow_total;    
-        }        
+            energy_flow_sum = energy_flow_sum + stream.energy_flow_total;
+        }
         return Some(energy_flow_sum);
     }
 
-    fn compute_outlet_phase_fractions(&self) {
+    /// Determines the phase fractions of the output using thermodynamics.
+    /// TODO: Implement this function
+    fn compute_outlet_phase_fractions(&self) {}
 
-    }
-
-    fn compute_outlet_temperature(&self) {
-
-    }
-
-    fn compute_outlet_pressure(&self) {
-
-    }
-
+    /// Computes the outlet temperature of the mixer (assumes no chemical
+    /// reactions) TODO: Implement this function
+    fn compute_outlet_temperature(&self) {}
+    
+    /// Computes the mixer outlet pressure.
+    /// TODO: Implement this function
+    fn compute_outlet_pressure(&self) {}
 }
 
+/// # Block Tests
+/// 
+/// The following module holds all the unit test cases for the blocks module
 #[cfg(test)]
 mod block_tests {
-    use crate::connector::{Mconnector, Econnector};
+    use crate::connector::{Econnector, Mconnector};
 
     use super::*;
-    // use std::io;
-    use uom::si::f64::Energy;
     use uom::si::energy::kilojoule;
+    use uom::si::f64::Energy;
     use uom::si::mass::pound;
-    
+
     #[test]
+    /// checks whether the mass balance check function was implemented properly
     fn test_mass_balance_check_steady_state_for_mixer() {
         // here you will need to check that the mass into the mixer = mass out of mixer
-        
+
         let mixer_test_obj = Mixer {
-            block_id : String::from("Test Mixer"),
-            x_cord : 0,
-            y_cord : 0,
-            input_streams_mass : Vec::new(),
-            input_streams_energy : Vec::new(),
-            outlet_stream_mass : None,
-            outlet_stream_energy : None
+            block_id: String::from("Test Mixer"),
+            x_cord: 0,
+            y_cord: 0,
+            input_streams_mass: Vec::new(),
+            input_streams_energy: Vec::new(),
+            outlet_stream_mass: None,
+            outlet_stream_energy: None,
         };
         let mass_in = Mass::new::<pound>(100.0);
         let mass_out = Mass::new::<pound>(95.0);
@@ -184,16 +203,17 @@ mod block_tests {
     }
 
     #[test]
+    /// checks if the 'energy_balance_check' function was implemented properly
     fn test_energy_balance_check_steady_state_for_mixer() {
         // energy into mixer = energy out of mixer
         let mixer_test_obj = Mixer {
-            block_id : String::from("Test Mixer"),
-            x_cord : 0,
-            y_cord : 0,
-            input_streams_mass : Vec::new(),
-            input_streams_energy : Vec::new(),
-            outlet_stream_mass : None,
-            outlet_stream_energy : None
+            block_id: String::from("Test Mixer"),
+            x_cord: 0,
+            y_cord: 0,
+            input_streams_mass: Vec::new(),
+            input_streams_energy: Vec::new(),
+            outlet_stream_mass: None,
+            outlet_stream_energy: None,
         };
         let energy_in = Energy::new::<kilojoule>(10.0);
         let energy_out = Energy::new::<kilojoule>(95.0);
@@ -201,38 +221,38 @@ mod block_tests {
     }
 
     #[test]
+    /// checking functionality of 'compute_total_outlet_mass_flow'
     fn test_compute_total_outlet_mass_flow() {
         let in_streams_mass = vec![
-            Mconnector { m_conn_id: String::from("Mass1"), m_flow_total: 3.0 },
-            Mconnector { m_conn_id: String::from("Mass2"), m_flow_total: 7.0 },
+            Mconnector {
+                m_conn_id: String::from("Mass1"),
+                m_flow_total: 3.0,
+            },
+            Mconnector {
+                m_conn_id: String::from("Mass2"),
+                m_flow_total: 7.0,
+            },
         ];
-        let mixer = Mixer::new(
-            String::from("Mixer3"),
-            0,
-            0,
-            in_streams_mass,
-            vec![],
-        );
+        let mixer = Mixer::new(String::from("Mixer3"), 0, 0, in_streams_mass, vec![]);
 
         assert_eq!(mixer.compute_total_outlet_mass_flow(), Some(10.0));
     }
 
-
     #[test]
+    /// checking functionality of 'compute_outlet_energy_flows'
     fn test_compute_outlet_energy_flows() {
         let in_streams_energy = vec![
-            Econnector { e_conn_id: String::from("Energy1"), energy_flow_total: 100.0 },
-            Econnector { e_conn_id: String::from("Energy2"), energy_flow_total: 200.0 },
+            Econnector {
+                e_conn_id: String::from("Energy1"),
+                energy_flow_total: 100.0,
+            },
+            Econnector {
+                e_conn_id: String::from("Energy2"),
+                energy_flow_total: 200.0,
+            },
         ];
-        let mixer = Mixer::new(
-            String::from("Mixer5"),
-            0,
-            0,
-            vec![],
-            in_streams_energy,
-        );
+        let mixer = Mixer::new(String::from("Mixer5"), 0, 0, vec![], in_streams_energy);
 
         assert_eq!(mixer.compute_outlet_energy_flows(), Some(300.0));
     }
-
 }

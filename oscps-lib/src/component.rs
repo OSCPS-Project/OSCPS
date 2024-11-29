@@ -1,99 +1,110 @@
 //! # Component
+//!
+//! Contains chemical properties for components in the simulation.
+
 extern crate uom;
 
 extern crate pubchem;
 use anyhow::Result;
 
+#[allow(dead_code)]
 /// This will hold the list of chemicals used within the simulation
-#[allow(dead_code)]
 pub struct ChemicalList {
-    chemical_list : Vec<pubchem::Compound>
+    chemical_list: Vec<pubchem::Compound>,
 }
 
-/// A struct to store information regarding the chemical properties of a particular substance.
-/// The "Chemical" struct is a wrapper for the pubchem::Compound object
 #[allow(dead_code)]
+/// A struct to store information regarding the chemical properties of a 
+/// particular substance. The "Chemical" struct is a wrapper for the 
+/// pubchem::Compound object
 pub struct Chemical {
-    /// The (PubChem)[https://pubchem.ncbi.nlm.nih.gov/] CID of a compound.
-    pub pubchem_obj : pubchem::Compound,
-    pub properties : ChemicalProperties
+    /// The (PubChem)[<https://pubchem.ncbi.nlm.nih.gov/>] CID of a compound.
+    pub pubchem_obj: pubchem::Compound,
+    /// Physical properties of a compound.
+    pub properties: ChemicalProperties,
 }
 
-/// This enum will be used by the "Chemical" struct to create the pubchem::Compound obj based on
-/// either the chemical name or the pubchem id of the chemical
 #[allow(dead_code)]
+/// Used by the "Chemical" struct to create the pubchem::Compound obj based on
+/// either the chemical name or the pubchem id of the chemical
 pub enum ChemicalIdentifier {
+    /// The PubChem ID of the component.
     PubchemID(u32),
+    /// The actual name of the component.
     CompoundName(String),
 }
 
 #[allow(dead_code)]
+/// Implementation of the chemical of interest.
 impl Chemical {
-
-    /// constructor
-    pub fn new(identifier : ChemicalIdentifier) -> Result<Self> {
+    /// Constructs a new chemical.
+    pub fn new(identifier: ChemicalIdentifier) -> Result<Self> {
         let pubchem_chemical_object = match identifier {
             ChemicalIdentifier::PubchemID(id) => pubchem::Compound::new(id),
             ChemicalIdentifier::CompoundName(name) => pubchem::Compound::with_name(name.as_str()),
         };
 
         let cid_vec = pubchem_chemical_object.cids().unwrap();
-
-        let cid : i32 = cid_vec[0];
-
-
-        //getting the properties of the chemical
+        let cid: i32 = cid_vec[0];
         let prop = ChemicalProperties::new(cid).unwrap();
-
         return Ok(Chemical {
-            pubchem_obj : pubchem_chemical_object,
-            properties : prop
+            pubchem_obj: pubchem_chemical_object,
+            properties: prop,
         });
     }
-    /// returns the pubchem object for the compound
+    /// Returns the pubchem object for the compound.
     pub fn get_pubchem_obj(&self) -> &pubchem::Compound {
         return &self.pubchem_obj;
     }
 
-    /// returns the "ChemicalProperties" object for the "Chemical" object 
+    /// Returns the "ChemicalProperties" object for the "Chemical" object.
     pub fn get_properties(&self) -> &ChemicalProperties {
         return &self.properties;
     }
 }
 
 #[allow(dead_code)]
+/// Struct containing properties of a chemical
 pub struct ChemicalProperties {
-    pub molar_mass: f64,    // kg/mol
-    pub critical_temp: f64, // K
+    /// Contains the molar mass of a compound.
+    pub molar_mass: f64,        // kg/mol
+    /// Critial temperature of a compoound.
+    pub critical_temp: f64,     // K
+    /// The critical pressure of a compound.
     pub critical_pressure: f64, // Pa
+    /// Acentric factor of a compound.
     pub acentric_factor: f64,
 }
 
+/// Implementation of the ChemicalProperties struct.
 impl ChemicalProperties {
-    pub fn new(cid : i32) -> Result<Self> {
+    /// Constructor for the ChemicalProperties struct.
+    pub fn new(cid: i32) -> Result<Self> {
         println!("Recieving information for compound/element {cid}");
         return Ok(ChemicalProperties {
-                    molar_mass: 0.0,    // kg/mol
-                    critical_temp: 0.0, // K
-                    critical_pressure: 0.0, // Pa
-                    acentric_factor: 0.0,
-                    });
+            molar_mass: 0.0,        // kg/mol
+            critical_temp: 0.0,     // K
+            critical_pressure: 0.0, // Pa
+            acentric_factor: 0.0,
+        });
     }
-
 }
 
 #[cfg(test)]
 mod chemical_species_tests {
-    use crate::component::{Chemical,ChemicalIdentifier};
+    use crate::component::{Chemical, ChemicalIdentifier};
 
     #[test]
     fn test_create_chemical_from_pubchem_id() {
         // Using a known PubChem ID, e.g., 7732 (water)
-        let identifier = ChemicalIdentifier::PubchemID(7732); 
+        let identifier = ChemicalIdentifier::PubchemID(7732);
 
         let chemical = Chemical::new(identifier);
 
-        assert!(chemical.is_ok(), "Failed to create chemical from PubChem ID");
+        assert!(
+            chemical.is_ok(),
+            "Failed to create chemical from PubChem ID"
+        );
         let chemical = chemical.unwrap();
 
         // Verify that the Chemical object contains the expected PubChem object
@@ -103,10 +114,9 @@ mod chemical_species_tests {
         // assert_eq!(chemical.get_properties().molar_mass, 0.0); // Example check for default values
     }
 
-
     #[test]
     fn test_create_chemical_from_name() {
-        let identifier = ChemicalIdentifier::CompoundName(String::from("Water")); 
+        let identifier = ChemicalIdentifier::CompoundName(String::from("Water"));
 
         let chemical = Chemical::new(identifier);
 
@@ -118,6 +128,4 @@ mod chemical_species_tests {
         assert_eq!(chemical.pubchem_obj.title().unwrap(), "Water");
         // assert_eq!(chemical.get_properties().molar_mass, 0.0); // Example check for default values
     }
-
-
 }
