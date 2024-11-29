@@ -7,19 +7,19 @@
 //! MassBalance trait but not the EnergyBalance.
 //!
 
-
-use uom::si::f64::{Energy};
-use uom::si::f64::{Mass};
+use uom::si::f64::Energy;
+use uom::si::f64::Mass;
 use uom::si::mass::kilogram;
 use uom::si::energy::joule;
-use crate::component::ChemicalIdentifier;
-use crate::{component, connector};
+use crate::connector;
 use once_cell::sync::Lazy;
 
 //Initiallizing a global variable for the tolerance for the energy balance
+#[allow(dead_code)]
 static TOLERENCE_ENERGY: Lazy<Energy> = Lazy::new(|| Energy::new::<joule>(5.0));
 
 //Initiallizing a global variable for the tolerance for the mass balance
+#[allow(dead_code)]
 static TOLERENCE_MASS: Lazy<Mass> = Lazy::new(|| Mass::new::<kilogram>(5.0));
 
 //Initiallizing a global variable for the tolerance for the element balance
@@ -27,6 +27,7 @@ static TOLERENCE_MASS: Lazy<Mass> = Lazy::new(|| Mass::new::<kilogram>(5.0));
 /// Trait for ensuring the overall mass balance is maintained in a flowsheet.
 ///
 /// This trait can be implemented by any block that needs to ensure mass conservation.
+#[allow(dead_code)]
 pub trait MassBalance {
     // total mass in - total mass out < tolerance
     fn mass_balance_check(&self, mass_in : Mass, mass_out : Mass) -> bool {
@@ -44,6 +45,7 @@ pub trait MassBalance {
 /// This trait ensures that blocks in the flowsheet adhere to energy conservation principles.
 ///
 /// This is useful for distinguishing between "dynamic" and "steady state" simulations.
+#[allow(dead_code)]
 pub trait EnergyBalance {
 
     // total energy in - total energy out < tolerance
@@ -63,12 +65,12 @@ pub trait EnergyBalance {
     }
 }
 
-
 /// # Mixer Block
 /// 
 /// A block used for simple stream mixing operations.
 /// 
 /// This struct requires the implementation of both EnergyBalance and MassBalance traits to ensure proper conservation principles are followed.
+#[allow(dead_code)]
 pub struct Mixer {
     pub block_id : String,
     pub x_cord : i32,
@@ -86,12 +88,13 @@ impl MassBalance for Mixer {}
 // Applying the energy balance trait to the Mixer Block
 impl EnergyBalance for Mixer {}
 
+#[allow(dead_code)]
 impl Mixer {
     pub fn new(id : String, x_cord : i32, y_cord : i32, in_streams_mass : Vec<connector::Mconnector>, in_streams_energy : Vec<connector::Econnector>) -> Mixer {
         return Mixer {
             block_id : id,
-            x_cord : x_cord,
-            y_cord : y_cord,
+            x_cord,
+            y_cord,
             input_streams_mass : in_streams_mass,
             input_streams_energy : in_streams_energy,
             outlet_stream_mass : None,
@@ -115,7 +118,7 @@ impl Mixer {
     /// 
     /// A Mass quantity (uom object) that holds the outlet mass flow
     fn compute_total_outlet_mass_flow(&self) -> Option<f64> {
-       // steps to implement function:
+       // TODO: steps to implement function:
         // Need to loop through each of the connector structures and add up the mass flows
             // During this process, need to make sure that all the mass flows are in the same units
             // Use the UOM package to help with this part...
@@ -138,7 +141,6 @@ impl Mixer {
         return Some(energy_flow_sum);
     }
 
-
     fn compute_outlet_phase_fractions(&self) {
 
     }
@@ -158,7 +160,7 @@ mod block_tests {
     use crate::connector::{Mconnector, Econnector};
 
     use super::*;
-    use std::io;
+    // use std::io;
     use uom::si::f64::Energy;
     use uom::si::energy::kilojoule;
     use uom::si::mass::pound;

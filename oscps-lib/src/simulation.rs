@@ -1,6 +1,17 @@
 // use std::collections::HashMap;
 
-// #[derive(Debug, Clone)]
+    // fn compute_outlet_phase_fractions(&self) {
+
+    // }
+
+    // fn compute_outlet_temperature(&self) {
+
+    // }
+
+    // fn compute_outlet_pressure(&self) {
+
+    // }
+ // #[derive(Debug, Clone)]
 // struct Settings {
 //     // Add fields as needed
 // }
