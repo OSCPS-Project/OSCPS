@@ -81,6 +81,8 @@ pub struct SpeciesListPair {
 
 #[allow(dead_code)]
 /// Implementation of ThermoState
+/// This struct holds the functionality to perform thermodynamic calculations for a stream or for
+/// an individual species
 impl ThermoState {
     /// Constructor for creating a ThermoState
     pub fn new(
@@ -132,6 +134,7 @@ mod thermo_tests {
     use uom::si::thermodynamic_temperature::kelvin;
 
     #[test]
+    ///Test case generates an instance of the 'ThermoState' struct
     fn test_create_thermo_state() {
         // Create some test data for ThermoMoleFrac (mole fractions)
         let water = Chemical {
@@ -175,6 +178,7 @@ mod thermo_tests {
     }
 
     #[test]
+    ///Tests the mass fraction function within the 'ThermoState struct'
     fn test_mass_fraction_calculation() {
         let water = Chemical {
             pubchem_obj: pubchem::Compound::new(962),
