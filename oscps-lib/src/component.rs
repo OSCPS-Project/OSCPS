@@ -8,24 +8,6 @@ extern crate pubchem;
 use anyhow::Result;
 use std::{thread,time::Duration};
 
-// pub enum RequestStatusCodes {
-//     BadRequest,
-//     NotFound,
-//     GatewayError,
-//     Success
-
-// }
-
-// impl RequestStatusCodes {
-//     pub fn value(&self) -> u32 {
-//         match self {
-//             RequestStatusCodes::Success => 200,
-//             RequestStatusCodes::NotFound => 404,
-//             RequestStatusCodes::GatewayError => 504,
-//             RequestStatusCodes::BadRequest => 400
-//         }
-//     }
-// }
 
 #[allow(dead_code)]
 /// This will hold the list of chemicals used within the simulation
