@@ -63,19 +63,19 @@ impl Chemical {
         // let cid_vec = pubchem_chemical_object.cids().unwrap();
         let cid: i32 = cid_vec.unwrap()[0];
         let prop = ChemicalProperties::new(cid).unwrap();
-        return Ok(Chemical {
+        Ok(Chemical {
             pubchem_obj: pubchem_chemical_object,
             properties: prop,
-        });
+        })
     }
     /// Returns the pubchem object for the compound.
     pub fn get_pubchem_obj(&self) -> &pubchem::Compound {
-        return &self.pubchem_obj;
+        &self.pubchem_obj
     }
 
     /// Returns the "ChemicalProperties" object for the "Chemical" object.
     pub fn get_properties(&self) -> &ChemicalProperties {
-        return &self.properties;
+        &self.properties
     }
 }
 
@@ -97,12 +97,12 @@ impl ChemicalProperties {
     /// Constructor for the ChemicalProperties struct.
     pub fn new(cid: i32) -> Result<Self> {
         println!("Recieving information for compound/element {cid}");
-        return Ok(ChemicalProperties {
+        Ok(ChemicalProperties {
             molar_mass: 0.0,        // kg/mol
             critical_temp: 0.0,     // K
             critical_pressure: 0.0, // Pa
             acentric_factor: 0.0,
-        });
+        })
     }
 }
 

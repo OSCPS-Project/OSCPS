@@ -22,10 +22,10 @@ pub struct Mconnector {
 impl Mconnector {
     /// Constructor for a connector.
     pub fn new(id: String) -> Mconnector {
-        return Mconnector {
+        Mconnector {
             m_conn_id: id,
             m_flow_total: 0.0,
-        };
+        }
     }
 }
 
@@ -46,9 +46,9 @@ pub struct Econnector {
 impl Econnector {
     /// Constructor for a connector.
     pub fn new(id: String) -> Econnector {
-        return Econnector {
+        Econnector {
             e_conn_id: id,
             energy_flow_total: 0.0,
-        };
+        }
     }
 }
