@@ -6,7 +6,7 @@
 //! For example, if a block is a simple mixer, then it will implement the
 //! MassBalance trait but not the EnergyBalance.
 
-use crate::connector;
+use crate::connector::Stream;
 use once_cell::sync::Lazy;
 use uom::si::energy::joule;
 use uom::si::f64::Energy;
@@ -80,13 +80,13 @@ pub struct Mixer {
     /// The y-coordinate on a flowsheet of the block.
     pub y_cord: i32,
     /// All mass input streams for the block.
-    pub input_streams_mass: Vec<connector::Mconnector>,
+    pub input_streams_mass: Vec<Stream>,
     /// All energy input streams for the block.
-    pub input_streams_energy: Vec<connector::Econnector>,
+    pub input_streams_energy: Vec<Stream>,
     /// All mass output streams for the block. 
-    pub outlet_stream_mass: Option<connector::Mconnector>,
+    pub outlet_stream_mass: Option<Stream>,
     /// All energy output streams for the block
-    pub outlet_stream_energy: Option<connector::Econnector>,
+    pub outlet_stream_energy: Option<Stream>,
 }
 
 /// Applying mass balance trait to Mixer Block
@@ -103,8 +103,8 @@ impl Mixer {
         id: String,
         x_cord: i32,
         y_cord: i32,
-        in_streams_mass: Vec<connector::Mconnector>,
-        in_streams_energy: Vec<connector::Econnector>,
+        in_streams_mass: Vec<Stream>,
+        in_streams_energy: Vec<Stream>,
     ) -> Mixer {
         return Mixer {
             block_id: id,

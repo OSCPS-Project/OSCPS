@@ -123,6 +123,14 @@ impl ThermoState {
         const R: f64 = 8.314; // J/(mol·K)
         (n * R * t) / v
     }
+
+    pub fn total_mass() {
+
+    }
+
+    pub fn enthalpy() {
+
+    }
 }
 
 #[cfg(test)]
