@@ -54,7 +54,7 @@ impl Chemical {
                     break;
                 },
                 _ => {
-                    request_counter = request_counter + 1;
+                    request_counter += 1;
                     thread::sleep(Duration::from_secs(10));
                 }
             };
