@@ -93,7 +93,7 @@ impl ThermoState {
         ThermoState {
             pressure: Pressure::new::<pascal>(pressure),
             temperature: ThermodynamicTemperature::new::<kelvin>(temperature),
-            mass_list: mass_list,
+            mass_list,
         }
     }
 
@@ -132,6 +132,7 @@ mod thermo_tests {
     use uom::si::mass::kilogram;
     use uom::si::pressure::pascal;
     use uom::si::thermodynamic_temperature::kelvin;
+    use std::{thread,time::Duration};
 
     #[test]
     ///Test case generates an instance of the 'ThermoState' struct
@@ -146,6 +147,7 @@ mod thermo_tests {
                 acentric_factor: 0.344,    // example
             },
         };
+        thread::sleep(Duration::from_secs(10));
         let water_mass = Mass::new::<kilogram>(2.0);
         let water_species_pair = SpeciesListPair {
             chemical_species: water,
@@ -163,6 +165,8 @@ mod thermo_tests {
         assert_eq!(thermo_state.pressure.get::<pascal>(), 101325.0);
         assert_eq!(thermo_state.temperature.get::<kelvin>(), 298.15);
         assert_eq!(thermo_state.mass_list.len(), 1); // Should contain one mole fraction entry
+
+        
 
         // Check that the mole fraction's chemical is correctly set
         assert_eq!(
@@ -187,6 +191,7 @@ mod thermo_tests {
                 acentric_factor: 0.344,    // example
             },
         };
+        thread::sleep(Duration::from_secs(10));
 
         let anisdine = Chemical {
             pubchem_obj: pubchem::Compound::new(7732),
@@ -197,7 +202,8 @@ mod thermo_tests {
                 acentric_factor: 0.24,    // (approximated)
             },
         };
-
+        thread::sleep(Duration::from_secs(10));
+        
         let water_mass = Mass::new::<kilogram>(2.0);
         let water_species_pair = SpeciesListPair {
             chemical_species: water,

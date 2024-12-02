@@ -6,6 +6,8 @@ extern crate uom;
 
 extern crate pubchem;
 use anyhow::Result;
+use std::{thread,time::Duration};
+
 
 #[allow(dead_code)]
 /// This will hold the list of chemicals used within the simulation
@@ -43,9 +45,23 @@ impl Chemical {
             ChemicalIdentifier::PubchemID(id) => pubchem::Compound::new(id),
             ChemicalIdentifier::CompoundName(name) => pubchem::Compound::with_name(name.as_str()),
         };
+        let mut request_counter = 0;
+        let mut cid_vec = None;
+        while request_counter <= 10 {
+            match pubchem_chemical_object.cids(){
+                Ok(cid_list) => {
+                    cid_vec = Some(cid_list);
+                    break;
+                },
+                _ => {
+                    request_counter = request_counter + 1;
+                    thread::sleep(Duration::from_secs(10));
+                }
+            };
+        }
 
-        let cid_vec = pubchem_chemical_object.cids().unwrap();
-        let cid: i32 = cid_vec[0];
+        // let cid_vec = pubchem_chemical_object.cids().unwrap();
+        let cid: i32 = cid_vec.unwrap()[0];
         let prop = ChemicalProperties::new(cid).unwrap();
         return Ok(Chemical {
             pubchem_obj: pubchem_chemical_object,
@@ -93,6 +109,7 @@ impl ChemicalProperties {
 #[cfg(test)]
 mod chemical_species_tests {
     use crate::component::{Chemical, ChemicalIdentifier};
+    use std::{thread,time::Duration};
 
     #[test]
     fn test_create_chemical_from_pubchem_id() {
@@ -100,7 +117,8 @@ mod chemical_species_tests {
         let identifier = ChemicalIdentifier::PubchemID(7732);
 
         let chemical = Chemical::new(identifier);
-
+        thread::sleep(Duration::from_secs(10));
+        
         assert!(
             chemical.is_ok(),
             "Failed to create chemical from PubChem ID"
@@ -119,6 +137,8 @@ mod chemical_species_tests {
         let identifier = ChemicalIdentifier::CompoundName(String::from("Water"));
 
         let chemical = Chemical::new(identifier);
+        thread::sleep(Duration::from_secs(10));
+
 
         assert!(chemical.is_ok(), "Failed to create chemical from name");
         let chemical = chemical.unwrap();
