@@ -42,7 +42,7 @@ pub trait MassBalance {
         let mass_in_kg = mass_in.get::<kilogram>();
         let mass_out_kg = mass_out.get::<kilogram>();
         let mass_difference = mass_in_kg - mass_out_kg;
-        return mass_difference <= TOLERENCE_MASS.get::<kilogram>();
+        mass_difference <= TOLERENCE_MASS.get::<kilogram>()
     }
 }
 
@@ -62,9 +62,7 @@ pub trait EnergyBalance {
         let energy_in_joules = energy_in.get::<joule>();
         let energy_out_joules = energy_out.get::<joule>();
         let energy_difference = energy_in_joules - energy_out_joules;
-        let within_threshold = energy_difference <= 
-            TOLERENCE_ENERGY.get::<joule>();
-        return within_threshold;
+        energy_difference <= TOLERENCE_ENERGY.get::<joule>()
     }
 }
 
@@ -106,7 +104,7 @@ impl Mixer {
         in_streams_mass: Vec<Stream>,
         in_streams_energy: Vec<Stream>,
     ) -> Mixer {
-        return Mixer {
+        Mixer {
             block_id: id,
             x_cord,
             y_cord,
@@ -114,7 +112,7 @@ impl Mixer {
             input_streams_energy: in_streams_energy,
             outlet_stream_mass: None,
             outlet_stream_energy: None,
-        };
+        }
     }
 
     /// Execute the mixer block (calculate balances, output streams, etc)
@@ -143,9 +141,9 @@ impl Mixer {
         let mut mass_flow_sum: f64 = 0.0;
 
         for stream in &self.input_streams_mass {
-            mass_flow_sum = mass_flow_sum + stream.m_flow_total;
+            mass_flow_sum += stream.m_flow_total;
         }
-        return Some(mass_flow_sum);
+        Some(mass_flow_sum)
     }
 
     /// Determines the total energy flowing through the block
@@ -153,9 +151,9 @@ impl Mixer {
         let mut energy_flow_sum: f64 = 0.0;
 
         for stream in &self.input_streams_energy {
-            energy_flow_sum = energy_flow_sum + stream.energy_flow_total;
+            energy_flow_sum += stream.energy_flow_total;
         }
-        return Some(energy_flow_sum);
+        Some(energy_flow_sum)
     }
 
     /// Determines the phase fractions of the output using thermodynamics.
