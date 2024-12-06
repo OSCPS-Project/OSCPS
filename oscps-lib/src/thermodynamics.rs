@@ -58,17 +58,6 @@ impl ThermodynamicConstants {
     }
 }
 
-#[allow(dead_code)]
-/// Returns a thermodynamic state, including pressure, temperature, and 
-/// mole fractions.
-pub struct ThermoState {
-    /// Pressure of the state.
-    pub pressure: Pressure,                    // Pressure in Pascals
-    /// Temperature of the state.
-    pub temperature: ThermodynamicTemperature, // Temperature in Kelvin
-    /// List of mole fractions.
-    pub mass_list: Vec<SpeciesListPair>,       // Mole fractions, typically unitless
-}
 
 #[allow(dead_code)]
 /// Species list
@@ -80,9 +69,23 @@ pub struct SpeciesListPair {
 }
 
 #[allow(dead_code)]
+/// # ThermoState
+/// Returns a thermodynamic state, including pressure, temperature, and 
+/// mole fractions.
+/// This struct will be used for streams in the flow diagram
+pub struct ThermoState {
+    /// Pressure of the state.
+    pub pressure: Pressure,                    // Pressure in Pascals
+    /// Temperature of the state.
+    pub temperature: ThermodynamicTemperature, // Temperature in Kelvin
+    /// List of mole fractions.
+    pub mass_list: Vec<SpeciesListPair>,       // Mole fractions, typically unitless
+}
+
+
+#[allow(dead_code)]
 /// Implementation of ThermoState
-/// This struct holds the functionality to perform thermodynamic calculations for a stream or for
-/// an individual species
+/// This struct holds the functionality to perform thermodynamic calculations for streams
 impl ThermoState {
     /// Constructor for creating a ThermoState
     pub fn new(
@@ -123,15 +126,22 @@ impl ThermoState {
         const R: f64 = 8.314; // J/(mol·K)
         (n * R * t) / v
     }
-
-    pub fn total_mass() {
-
+    
+    /// this function will return the total mass for an individual stream
+    pub fn total_mass(&self) -> f64 {
+        let mut mass_sum  = 0.0;
+        for chem in &self.mass_list {
+            mass_sum += chem.mass_quantity.get::<kilogram>();
+        }
+        mass_sum
     }
-
+    
+    /// This function will provide the enthalpy of an individual stream
     pub fn enthalpy() {
 
     }
 }
+
 
 #[cfg(test)]
 mod thermo_tests {
