@@ -36,7 +36,7 @@ impl State {
     }
 }
 
-// A Bezier curve. It has a state, as well as a curves array.
+// Stores Bezier curves. It has a state, as well as a curves array.
 struct Bezier<'a> {
     state: &'a State,
     curves: &'a [Curve],
@@ -224,21 +224,25 @@ impl Pending {
         if let Some(cursor_position) = cursor.position_in(bounds) {
             match *self {
                 Pending::One { from } => {
+                    println!("Drawing a line.");
+                    // Draw a line from the "from" point to the cursor position.
                     let line = Path::line(from, cursor_position);
                     frame.stroke(
                         &line,
                         Stroke::default()
-                        .with_width(0.5)
+                        .with_width(1.0)
                         .with_color(theme.palette().text),
                     );
                 }
                 Pending::Two { from, to } => {
+                    println!("Drawing an in-situ curve.");
                     let curve = Curve {
                         from,
                         to,
                         control: cursor_position,
                     };
-
+                    
+                    // Draw this curve in this frame, using this theme.
                     Curve::draw_all(&[curve], &mut frame, theme);
                 }
             };
