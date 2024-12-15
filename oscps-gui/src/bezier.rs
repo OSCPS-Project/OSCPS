@@ -105,12 +105,22 @@ impl<'a> canvas::Program<Curve> for Bezier<'a> {
                                 })
                             }
                         }
+                    },
+                    mouse::Event::ButtonPressed(mouse::Button::Right) => {
+                        println!("You pressed the right mouse button!");
+                        None
                     }
                     // Ignore anything else
                     _ => None,
                 };
 
                 (event::Status::Captured, message)
+            },
+            Event::Keyboard(_) => {
+                println!("You pressed a key!");
+
+
+                (event::Status::Captured, None) 
             }
             _ => (event::Status::Ignored, None),
         }

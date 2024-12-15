@@ -1,12 +1,13 @@
 //! This example showcases an interactive `Canvas` for drawing Bézier curves.
 mod bezier;
-use iced::widget::{button, container, horizontal_space, hover};
+use iced::widget::{button, container, horizontal_space, hover, column};
 use iced::{Element, Fill, Theme};
 
 // Main function. Returns result from iced::application
 pub fn main() -> iced::Result {
     // Sets window title, update method, and view method. Sets the theme, enables
     // antialiasing, centers the main window, and runs the program.
+    println!("Starting application...");
     iced::application("Bezier Tool - Iced", Example::update, Example::view)
         .theme(|_| Theme::Dark)
         .antialiasing(true)
@@ -18,8 +19,8 @@ pub fn main() -> iced::Result {
 // Presumably, the first bezier is the one actively being used
 #[derive(Default)]
 struct Example {
-    bezier: bezier::State,
-    curves: Vec<bezier::Curve>,
+    bezier: bezier::State, // State variable, stores cache, which stores geometry.
+    curves: Vec<bezier::Curve>, // Curves are just three points.
 }
 
 // Messages that are processed. The first is a click to add a curve, the second
@@ -28,6 +29,7 @@ struct Example {
 enum Message {
     AddCurve(bezier::Curve),
     Clear,
+    Test,
 }
 
 // For example, we are going to implement the update and view functions.
@@ -49,6 +51,9 @@ impl Example {
                 self.bezier = bezier::State::default();
                 self.curves.clear();
             }
+            Message::Test => {
+                println!("Test clicked!");
+            }
         }
     }
     // For this function, we are going to configure how the view is seen by the
@@ -63,6 +68,7 @@ impl Example {
         container(
             // Hover displays one widget on top of another one. This will be 
             // where the bezier curves are drawn. (I think)
+            column![
             hover(
                 // This askes the current bezier curve to display a view, and it 
                 // will map it to the AddCurve message.
@@ -82,10 +88,15 @@ impl Example {
                         .style(button::danger)
                         .on_press(Message::Clear),
                     )
-                        .padding(10)
-                        .align_bottom(Fill)
+                    .padding(10)
+                    .align_top(Fill)
                 },
+            ),
+            container(
+                button("Test text").on_press(Message::Test),
             )
+
+            ]
         )
         .padding(20)
         .into()
