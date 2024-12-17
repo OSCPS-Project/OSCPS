@@ -5,4 +5,4 @@ authors = ["Nathaniel Thomas <nathaniel@swbell.net>", "Bhargav Akula <bhargavaku
 edition = "2021"
 
 [dependencies]
-iced = {version = "0.13.1", features = ["canvas", "debug"]}
+iced = {version = "0.13.1", features = ["canvas", "debug", "lazy"]}
