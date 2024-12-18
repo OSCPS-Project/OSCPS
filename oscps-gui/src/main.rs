@@ -20,7 +20,6 @@ struct MainWindow {
     focus: Option<pane_grid::Pane>,
     flowsheet: flowsheet::State,
     curves: Vec<flowsheet::Curve>,
-    squares: Vec<flowsheet::Square>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -53,7 +52,6 @@ impl MainWindow {
             focus: None,
             flowsheet: flowsheet::State::default(),
             curves: Vec::default(),
-            squares: Vec::default(),
         }
     }
 
@@ -194,7 +192,7 @@ impl MainWindow {
                 // pane.is_pinned,
                 size,
             hover(
-                self.flowsheet.view(&self.curves, &self.squares).map(Message::AddCurve),
+                self.flowsheet.view(&self.curves).map(Message::AddCurve),
                 if self.curves.is_empty() {
                     container(horizontal_space())
                 } else {
