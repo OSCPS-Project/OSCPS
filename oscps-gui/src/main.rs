@@ -3,7 +3,7 @@ mod style;
 
 use iced::keyboard;
 use iced::widget::pane_grid::{self, PaneGrid};
-use iced::widget::{button, column, container, horizontal_space, hover, responsive, row, scrollable, text};
+use iced::widget::{button, column, container, horizontal_space, hover, responsive, row, text};
 use iced::{Center, Color, Element, Fill, Size, Subscription, Theme};
 
 pub fn main() -> iced::Result {
@@ -20,6 +20,7 @@ struct MainWindow {
     focus: Option<pane_grid::Pane>,
     flowsheet: flowsheet::State,
     curves: Vec<flowsheet::Curve>,
+    squares: Vec<flowsheet::Square>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -52,6 +53,7 @@ impl MainWindow {
             focus: None,
             flowsheet: flowsheet::State::default(),
             curves: Vec::default(),
+            squares: Vec::default(),
         }
     }
 
@@ -105,7 +107,6 @@ impl MainWindow {
             Message::CloseFocused => {
                 println!("You closed a focused pane!")
             },
-            _ => ()
         }
     }
 
@@ -193,7 +194,7 @@ impl MainWindow {
                 // pane.is_pinned,
                 size,
             hover(
-                self.flowsheet.view(&self.curves).map(Message::AddCurve),
+                self.flowsheet.view(&self.curves, &self.squares).map(Message::AddCurve),
                 if self.curves.is_empty() {
                     container(horizontal_space())
                 } else {
