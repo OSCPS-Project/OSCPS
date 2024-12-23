@@ -3,18 +3,24 @@ mod style;
 
 use iced::keyboard;
 use iced::widget::pane_grid::{self, PaneGrid};
-use iced::widget::{button, column, container, horizontal_space, hover, responsive, row, text};
+use iced::widget::{toggler, button, column, container, horizontal_space, hover, responsive, row, text};
 use iced::{Center, Color, Element, Fill, Size, Subscription, Theme};
 
+use log::{error, warn, info, debug, trace};
+
+
 pub fn main() -> iced::Result {
+    env_logger::init();
+    info!("Starting application");
     iced::application("Open Source Chemical Process Simulator", MainWindow::update, MainWindow::view)
-        .theme(|_| Theme::Dark)
+        .theme(|_| Theme::CatppuccinMocha)
         .antialiasing(true)
         .centered()
         .run()
 }
 
 struct MainWindow {
+    theme: Theme,
     panes: pane_grid::State<Pane>,
     panes_created: usize,
     focus: Option<pane_grid::Pane>,
@@ -26,7 +32,7 @@ struct MainWindow {
 enum Message {
     AddCurve(flowsheet::Curve),
     Clear,
-    PlaceMixer,
+    PlaceComponent(flowsheet::BlockPlacement),
     Split(pane_grid::Axis, pane_grid::Pane),
     SplitFocused(pane_grid::Axis),
     FocusAdjacent(pane_grid::Direction),
@@ -47,6 +53,7 @@ impl MainWindow {
         panes.split(pane_grid::Axis::Horizontal, pane, Pane::new_selection());
 
         MainWindow {
+            theme: Theme::default(),
             panes,
             panes_created: 1,
             focus: None,
@@ -58,6 +65,7 @@ impl MainWindow {
     fn update(&mut self, message: Message) {
         match message {
             Message::AddCurve(curve) => {
+                info!("Adding curve");
                 self.curves.push(curve);
                 self.flowsheet.request_redraw();
             }
@@ -65,19 +73,33 @@ impl MainWindow {
                 self.flowsheet = flowsheet::State::default();
                 self.curves.clear();
             }
-            Message::PlaceMixer => {
-                println!("Placing Mixer!");
-            }
+            // Default placement mode should be 'None'
+            Message::PlaceComponent(component) => {
+                match component { // TODO: Modify to do more work other than a simple assignment.
+                    flowsheet::BlockPlacement::Default => {
+                        info!("Setting to default placement mode.");
+                        self.flowsheet.placement_mode = flowsheet::BlockPlacement::default();
+                    },
+                    flowsheet::BlockPlacement::Connector => {
+                        info!("Setting to connector placement mode.");
+                        self.flowsheet.placement_mode = flowsheet::BlockPlacement::Connector;
+                    },
+                    flowsheet::BlockPlacement::Mixer => {
+                        info!("Setting to mixer placement mode.");
+                        self.flowsheet.placement_mode = flowsheet::BlockPlacement::Mixer;
+                    },
+                }
+            },
             Message::Split(_axis, _pane) => {
-                println!("You split a pane!")
+                info!("You split a pane!")
             },
             Message::SplitFocused(_axis) => {
-                println!("You split a focused pane!")
+                info!("You split a focused pane!")
             },
             Message::FocusAdjacent(_direction) => (),
             Message::Clicked(pane) => {
                 self.focus = Some(pane);
-                println!("You clicked on a pane!")
+                info!("You clicked on a pane!")
                 },
             Message::Dragged(pane_grid::DragEvent::Dropped{ pane, target }) => { // pane, target
                 self.panes.drop(pane, target);
@@ -125,16 +147,40 @@ impl MainWindow {
         let pane_grid = PaneGrid::new(&self.panes, |id, pane, _is_maximized| {
         match pane {
             Pane::Canvas{ id: _, is_pinned: _} => {
-                println!("Found canvas!"); 
+                debug!("Found canvas!"); 
             }
             Pane::UnitSelection => {
-                println!("Found Selection!");
+                debug!("Found Selection!");
                 return row![
                     container(
-                        button("Place Mixer").on_press(Message::PlaceMixer),
+                        button("Place Connector")
+                        .style(
+                            match self.flowsheet.placement_mode {
+                                flowsheet::BlockPlacement::Connector => button::danger,
+                                _ => button::secondary,
+                            }
+                        )
+                        .on_press( 
+                            match self.flowsheet.placement_mode {
+                                flowsheet::BlockPlacement::Connector => Message::PlaceComponent(flowsheet::BlockPlacement::Default),
+                                _ => Message::PlaceComponent(flowsheet::BlockPlacement::Connector) 
+                            }
+                        )
                     ),
                     container(
-                        button("Place Other Component"),
+                        button("Place Mixer")
+                        .style(
+                            match self.flowsheet.placement_mode {
+                                flowsheet::BlockPlacement::Mixer => button::danger,
+                                _ => button::secondary,
+                            }
+                        )
+                        .on_press( 
+                            match self.flowsheet.placement_mode {
+                                flowsheet::BlockPlacement::Mixer => Message::PlaceComponent(flowsheet::BlockPlacement::Default),
+                                _ => Message::PlaceComponent(flowsheet::BlockPlacement::Mixer) 
+                            }
+                        )
                     ),
                 ].into()
             }
@@ -149,7 +195,7 @@ impl MainWindow {
 
         let title = row![
             // pin_button,
-            "Pane",
+            "Flowsheet",
             // text(pane.id.to_string()).color(if is_focused{
             //     PANE_ID_COLOR_FOCUSED
             // } else {
