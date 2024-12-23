@@ -1,9 +1,9 @@
 use iced::mouse;
 use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::{self, Canvas, Frame, Geometry, Path, Stroke};
-use iced::{Element, Fill, Point, Rectangle, Renderer, Theme, Size};
+use iced::{Element, Fill, Point, Rectangle, Renderer, Theme};
 
-use log::{error, warn, info, debug, trace};
+use log::{info, debug};
 
 #[derive(Default)]
 pub struct State {
@@ -345,14 +345,6 @@ impl Pending {
                         .with_color(theme.palette().text),
                     );
                 }
-                // Pending::Two { from, to } => {
-                //     let curve = Curve::Connector {
-                //         from,
-                //         to,
-                //     };
-
-                //     Curve::draw_all(&[curve], &mut frame, theme);
-                // }
             };
         }
 
