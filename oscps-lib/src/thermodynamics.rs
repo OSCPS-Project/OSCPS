@@ -128,7 +128,7 @@ impl ThermoState {
     }
     
     /// this function will return the total mass for an individual stream
-    pub fn total_mass(&self) -> f64 {
+    pub fn total_mass(& self) -> f64 {
         let mut mass_sum  = 0.0;
         for chem in &self.mass_list {
             mass_sum += chem.mass_quantity.get::<kilogram>();
@@ -137,8 +137,9 @@ impl ThermoState {
     }
     
     /// This function will provide the enthalpy of an individual stream
-    pub fn enthalpy() {
-
+    pub fn enthalpy(& self) -> f64 {
+        let mut energy_num = 0.0;
+        energy_num
     }
 }
 
