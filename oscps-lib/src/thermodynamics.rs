@@ -61,7 +61,7 @@ impl ThermodynamicConstants {
 
 #[allow(dead_code)]
 /// Species list
-pub struct SpeciesListPair {
+pub struct SpeciesQuantityPair {
     /// Chemical species
     pub chemical_species: Chemical,
     /// Mass quantity
@@ -79,7 +79,7 @@ pub struct ThermoState {
     /// Temperature of the state.
     pub temperature: ThermodynamicTemperature, // Temperature in Kelvin
     /// List of mole fractions.
-    pub mass_list: Vec<SpeciesListPair>,       // Mole fractions, typically unitless
+    pub mass_list: Vec<SpeciesQuantityPair>,       // Mole fractions, typically unitless
 }
 
 
@@ -91,7 +91,7 @@ impl ThermoState {
     pub fn new(
         pressure: f64,    // in Pascals
         temperature: f64, // in Kelvin
-        mass_list: Vec<SpeciesListPair>,
+        mass_list: Vec<SpeciesQuantityPair>,
     ) -> Self {
         ThermoState {
             pressure: Pressure::new::<pascal>(pressure),
@@ -168,7 +168,7 @@ mod thermo_tests {
         };
         thread::sleep(Duration::from_secs(10));
         let water_mass = Mass::new::<kilogram>(2.0);
-        let water_species_pair = SpeciesListPair {
+        let water_species_pair = SpeciesQuantityPair {
             chemical_species: water,
             mass_quantity: water_mass,
         };
@@ -224,13 +224,13 @@ mod thermo_tests {
         thread::sleep(Duration::from_secs(10));
         
         let water_mass = Mass::new::<kilogram>(2.0);
-        let water_species_pair = SpeciesListPair {
+        let water_species_pair = SpeciesQuantityPair {
             chemical_species: water,
             mass_quantity: water_mass,
         };
 
         let anisidine_mass = Mass::new::<kilogram>(8.0);
-        let anisidine_species_pair = SpeciesListPair {
+        let anisidine_species_pair = SpeciesQuantityPair {
             chemical_species: anisdine,
             mass_quantity: anisidine_mass,
         };
