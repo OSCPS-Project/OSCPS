@@ -7,13 +7,19 @@ use crate::thermodynamics::ThermoState;
 /// 
 /// Struct to hold stream information
 pub struct Stream {
-    /// Stream id
+    // TODO: IDs must be unique within the flowsheet. Consider using integers
+    // as IDs and having a separate field for the name of a connector. Adopt
+    // a similar scheme for blocks.
+    /// ID of the stream. 
     pub s_id : String,
-    /// Instance of ThermoState struct that holds 
+    /// Instance of ThermoState struct that holds thermodynamic information.
     pub thermo : Option<ThermoState>,
-    /// block id for where the stream is coming from
+    // TODO: Change these from strings to integers, or better yet, 
+    // references to the source and destination blocks, to minimize
+    // computation time spent on looking for sources and destinations.
+    /// ID of source block
     pub from_block : String,
-    /// block id for where the stream is going to
+    /// ID of destination block
     pub to_block : String
 }
 
