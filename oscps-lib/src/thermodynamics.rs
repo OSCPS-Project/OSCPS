@@ -1,10 +1,10 @@
 //! # Thermodynamics
 //!
-//! This module will hold all the functions related to calculating 
+//! This module will hold all the functions related to calculating
 //! themrodynamic properties for the blocks and chemical species.
 //!
 //! TODO: All public items, including struct members, must be documented. Placeholder
-//! documentation is in place, but more descriptive documentation should be 
+//! documentation is in place, but more descriptive documentation should be
 //! implemented in the future.
 
 use crate::component::Chemical;
@@ -20,11 +20,11 @@ pub enum ThermodynamicConstants {
     /// The Universal gas constant in J/(mol*K)
     UniversalGasConstant, // J/(mol*K)
     /// Standard temperature in K
-    StandardTemperature,  // T_0
+    StandardTemperature, // T_0
     /// Standard pressure in Pa
-    StandardPressure,     // P_0
+    StandardPressure, // P_0
     /// Avogadro's number in mol^-1
-    AvogadroNumber,       // N_A
+    AvogadroNumber, // N_A
 }
 
 #[allow(dead_code)]
@@ -38,7 +38,7 @@ pub enum ConstantValue {
     Dimensionless(f64),
 }
 
-#[allow(dead_code)] 
+#[allow(dead_code)]
 /// Implements values of thermodynamic constants.
 impl ThermodynamicConstants {
     /// Returns the value of the thermodynamic constant with its appropriate type.
@@ -58,7 +58,6 @@ impl ThermodynamicConstants {
     }
 }
 
-
 #[allow(dead_code)]
 /// Species list
 pub struct SpeciesQuantityPair {
@@ -70,18 +69,17 @@ pub struct SpeciesQuantityPair {
 
 #[allow(dead_code)]
 /// # ThermoState
-/// Returns a thermodynamic state, including pressure, temperature, and 
+/// Returns a thermodynamic state, including pressure, temperature, and
 /// mole fractions.
 /// This struct will be used for streams in the flow diagram
 pub struct ThermoState {
     /// Pressure of the state.
-    pub pressure: Pressure,                    // Pressure in Pascals
+    pub pressure: Pressure, // Pressure in Pascals
     /// Temperature of the state.
     pub temperature: ThermodynamicTemperature, // Temperature in Kelvin
     /// List of mole fractions.
-    pub mass_list: Vec<SpeciesQuantityPair>,       // Mole fractions, typically unitless
+    pub mass_list: Vec<SpeciesQuantityPair>, // Mole fractions, typically unitless
 }
-
 
 #[allow(dead_code)]
 /// Implementation of ThermoState
@@ -126,32 +124,31 @@ impl ThermoState {
         const R: f64 = 8.314; // J/(mol·K)
         (n * R * t) / v
     }
-    
+
     /// this function will return the total mass for an individual stream
-    pub fn total_mass(& self) -> f64 {
-        let mut mass_sum  = 0.0;
+    pub fn total_mass(&self) -> f64 {
+        let mut mass_sum = 0.0;
         for chem in &self.mass_list {
             mass_sum += chem.mass_quantity.get::<kilogram>();
         }
         mass_sum
     }
-    
+
     /// This function will provide the enthalpy of an individual stream
-    pub fn enthalpy(& self) -> f64 {
+    pub fn enthalpy(&self) -> f64 {
         let mut energy_num = 0.0;
         energy_num
     }
 }
 
-
 #[cfg(test)]
 mod thermo_tests {
     use super::*;
     use crate::component::{Chemical, ChemicalProperties};
+    use std::{thread, time::Duration};
     use uom::si::mass::kilogram;
     use uom::si::pressure::pascal;
     use uom::si::thermodynamic_temperature::kelvin;
-    use std::{thread,time::Duration};
 
     #[test]
     ///Test case generates an instance of the 'ThermoState' struct
@@ -184,8 +181,6 @@ mod thermo_tests {
         assert_eq!(thermo_state.pressure.get::<pascal>(), 101325.0);
         assert_eq!(thermo_state.temperature.get::<kelvin>(), 298.15);
         assert_eq!(thermo_state.mass_list.len(), 1); // Should contain one mole fraction entry
-
-        
 
         // Check that the mole fraction's chemical is correctly set
         assert_eq!(
@@ -222,7 +217,7 @@ mod thermo_tests {
             },
         };
         thread::sleep(Duration::from_secs(10));
-        
+
         let water_mass = Mass::new::<kilogram>(2.0);
         let water_species_pair = SpeciesQuantityPair {
             chemical_species: water,

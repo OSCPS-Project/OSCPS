@@ -1,6 +1,6 @@
 //! # Blocks
 //!
-//! This file contains traits implemented by various structs to represent 
+//! This file contains traits implemented by various structs to represent
 //! different unit operations.
 //!
 //! For example, if a block is a simple mixer, then it will implement the
@@ -17,19 +17,19 @@ use uom::si::mass::kilogram;
 ///
 /// A trait that all blocks must implement.
 /// TODO: In ASPEN, streams can be used to specify process inputs and outputs.
-/// Instead, have special blocks that are 'source' and 'sink' blocks for 
+/// Instead, have special blocks that are 'source' and 'sink' blocks for
 /// material entering and exiting the simulation. To make it more user friendly,
-/// if a user attempts to run a simulation with stream that are not connected to 
+/// if a user attempts to run a simulation with stream that are not connected to
 /// inputs or outputs, offer to automatically insert sources/sinks where the loose
 /// ends are. While these special blocks will still have to implement this trait
 /// (and thus implement unnecessary functions, such as the "connect_input" function
 /// for a souce block, these functions can simply be dummy functions for this special case.
 /// For safety, they can throw errors if called, but they should never be used.
 pub trait Block {
-    fn connect_input(&mut self, stream: &mut Stream) -> Result<(), String>;
-    fn connect_ouutput(&mut self, stream: &mut Stream) -> Result<(), String>;
-    fn disconnect_input(&mut self, stream: &mut Stream) -> Result<(), String>;
-    fn disconnect_ouutput(&mut self, stream: &mut Stream) -> Result<(), String>;
+    fn connect_input(&mut self, stream: &mut Stream) -> Result<(), &str>;
+    fn disconnect_input(&mut self, stream: &mut Stream) -> Result<(), &str>;
+    fn connect_output(&mut self, stream: &mut Stream) -> Result<(), &str>;
+    fn disconnect_output(&mut self, stream: &mut Stream) -> Result<(), &str>;
     // TODO: Add additional functions that all Blocks should implement
 }
 
@@ -41,7 +41,7 @@ struct Separator {
     id: u64,
     input: Option<Stream>, // An option is used in case there is no input stream
     outputs: Vec<Stream>, // An empty vec can represent no outputs, no need for Option<Vec<Stream>>>
-    // TODO: Add additional fields that controls how components are separated
+                          // TODO: Add additional fields that controls how components are separated
 }
 
 impl Separator {
@@ -49,7 +49,7 @@ impl Separator {
         Separator {
             id,
             input: None,
-            outputs: vec![],
+            outputs: Vec::new(),
         }
     }
 }
@@ -63,23 +63,20 @@ pub struct Mixer {
     /// The ID of the block.
     pub id: u64,
     /// Set of inlet streams for the mixer
-    pub inlet_streams : Vec<Stream>,
+    pub inputs: Vec<Box<Stream>>,
     /// outlet stream for the mixer block
-    pub outlet_stream : Option<Stream>
+    pub output: Option<Box<Stream>>,
 }
 
 #[allow(dead_code)]
 /// Implementations of the mixer block.
 impl Mixer {
-    /// Create a new mixer block.
-    pub fn new(
-        id: u64,
-        in_streams: Vec<Stream>,
-    ) -> Mixer {
+    /// Create a new mixer block. TODO: Figure out importance of lifetimes
+    pub fn new<'a>(id: u64) -> Mixer {
         Mixer {
             id,
-            inlet_streams: in_streams,
-            outlet_stream: None
+            inputs: Vec::new(),
+            output: None,
         }
     }
 
@@ -118,8 +115,6 @@ impl Mixer {
     //     Some(mass_flow_sum)
     // }
 
-    // asdhjasdhjhjhjhjahsdasdsadfasdfsadfsdfsdfasldkfjhaslkjdfhasldjfhasdfkajshdgfaskjhdfgaskdfhjg
-
     // /// Determines the total energy flowing through the block
     // fn compute_outlet_energy_flows(&self) -> Option<f64> {
     //     let mut energy_flow_sum: f64 = 0.0;
@@ -137,33 +132,51 @@ impl Mixer {
     // /// Computes the outlet temperature of the mixer (assumes no chemical
     // /// reactions) TODO: Implement this function
     // fn compute_outlet_temperature(&self) {}
-    
+
     // /// Computes the mixer outlet pressure.
     // /// TODO: Implement this function
     // fn compute_outlet_pressure(&self) {}
 }
 
-#[allow(dead_code)]
-/// Minimum error allowed for energy difference. 
-/// TODO: Change this to a relative scale instead of an absolute scale.
-pub static TOLERENCE_ENERGY: Lazy<Energy> = 
-    Lazy::new(|| Energy::new::<joule>(5.0));
+impl Block for Mixer {
+    fn connect_input<'a>(&mut self, _stream: &mut Stream) -> Result<(), &'static str> {
+        // TODO: Figure out how to store references to streams
+        // self.inputs.push(stream);
+        Ok(())
+    }
+
+    fn disconnect_input(&mut self, _stream: &mut Stream) -> Result<(), &'static str> {
+        Ok(())
+    }
+
+    fn connect_output(&mut self, _stream: &mut Stream) -> Result<(), &'static str> {
+        Ok(())
+    }
+
+    fn disconnect_output(&mut self, _stream: &mut Stream) -> Result<(), &'static str> {
+        Ok(())
+    }
+}
 
 #[allow(dead_code)]
-/// Minimum error allowed for mass difference. 
+/// Minimum error allowed for energy difference.
 /// TODO: Change this to a relative scale instead of an absolute scale.
-pub static TOLERENCE_MASS: Lazy<Mass> = 
-    Lazy::new(|| Mass::new::<kilogram>(5.0));
+pub static TOLERENCE_ENERGY: Lazy<Energy> = Lazy::new(|| Energy::new::<joule>(5.0));
+
+#[allow(dead_code)]
+/// Minimum error allowed for mass difference.
+/// TODO: Change this to a relative scale instead of an absolute scale.
+pub static TOLERENCE_MASS: Lazy<Mass> = Lazy::new(|| Mass::new::<kilogram>(5.0));
 
 #[allow(dead_code)]
 /// # MassBalance
 ///
 /// Trait for ensuring the overall mass balance is maintained in a flowsheet.
 ///
-/// This trait can be implemented by any block that needs to ensure mass 
+/// This trait can be implemented by any block that needs to ensure mass
 /// conservation.
 pub trait MassBalance {
-    /// Perform a mass balance check on object by comparing inlet and outlet 
+    /// Perform a mass balance check on object by comparing inlet and outlet
     /// mass. TODO: Compare mass flow rates, not mass and check for relative
     /// error instead of absolute, perhaps error should be less than 1e-6
     /// fraction of the total inlet mass. This can be an adjustable parameter.
@@ -179,23 +192,21 @@ pub trait MassBalance {
 #[allow(dead_code)]
 /// # EnergyBalance
 ///
-/// This trait ensures that blocks in the flowsheet adhere to energy 
+/// This trait ensures that blocks in the flowsheet adhere to energy
 /// conservation principles.
 pub trait EnergyBalance {
     /// Perform an energy balance on a block. Checks all input and output
-    /// streams and ensures that energy stays the same. TODO: Ensure that 
+    /// streams and ensures that energy stays the same. TODO: Ensure that
     /// energy loss is accounted for. For example, a mixer may not be entirely
-    /// adiabatic, and therefor some energy will be lost to the environment. 
+    /// adiabatic, and therefor some energy will be lost to the environment.
     /// Also implement changes in issue #19.
-    fn energy_balance_check(&self, energy_in: Energy, energy_out: Energy) -> 
-        bool {
+    fn energy_balance_check(&self, energy_in: Energy, energy_out: Energy) -> bool {
         let energy_in_joules = energy_in.get::<joule>();
         let energy_out_joules = energy_out.get::<joule>();
         let energy_difference = energy_in_joules - energy_out_joules;
         energy_difference <= TOLERENCE_ENERGY.get::<joule>()
     }
 }
-
 
 /// Applying mass balance trait to Mixer Block
 impl MassBalance for Mixer {}
@@ -204,7 +215,7 @@ impl MassBalance for Mixer {}
 impl EnergyBalance for Mixer {}
 
 /// # Block Tests
-/// 
+///
 /// The following module holds all the unit test cases for the blocks module
 #[cfg(test)]
 mod block_tests {

@@ -6,8 +6,7 @@ extern crate uom;
 
 extern crate pubchem;
 use anyhow::Result;
-use std::{thread,time::Duration};
-
+use std::{thread, time::Duration};
 
 #[allow(dead_code)]
 /// This will hold the list of chemicals used within the simulation
@@ -16,8 +15,8 @@ pub struct ChemicalList {
 }
 
 #[allow(dead_code)]
-/// A struct to store information regarding the chemical properties of a 
-/// particular substance. The "Chemical" struct is a wrapper for the 
+/// A struct to store information regarding the chemical properties of a
+/// particular substance. The "Chemical" struct is a wrapper for the
 /// pubchem::Compound object
 pub struct Chemical {
     /// The (PubChem)[<https://pubchem.ncbi.nlm.nih.gov/>] CID of a compound.
@@ -48,11 +47,11 @@ impl Chemical {
         let mut request_counter = 0;
         let mut cid_vec = None;
         while request_counter <= 10 {
-            match pubchem_chemical_object.cids(){
+            match pubchem_chemical_object.cids() {
                 Ok(cid_list) => {
                     cid_vec = Some(cid_list);
                     break;
-                },
+                }
                 _ => {
                     request_counter += 1;
                     thread::sleep(Duration::from_secs(10));
@@ -83,9 +82,9 @@ impl Chemical {
 /// Struct containing properties of a chemical
 pub struct ChemicalProperties {
     /// Contains the molar mass of a compound.
-    pub molar_mass: f64,        // kg/mol
+    pub molar_mass: f64, // kg/mol
     /// Critial temperature of a compoound.
-    pub critical_temp: f64,     // K
+    pub critical_temp: f64, // K
     /// The critical pressure of a compound.
     pub critical_pressure: f64, // Pa
     /// Acentric factor of a compound.
@@ -109,7 +108,7 @@ impl ChemicalProperties {
 #[cfg(test)]
 mod chemical_species_tests {
     use crate::component::{Chemical, ChemicalIdentifier};
-    use std::{thread,time::Duration};
+    use std::{thread, time::Duration};
 
     #[test]
     fn test_create_chemical_from_pubchem_id() {
@@ -118,7 +117,7 @@ mod chemical_species_tests {
 
         let chemical = Chemical::new(identifier);
         thread::sleep(Duration::from_secs(10));
-        
+
         assert!(
             chemical.is_ok(),
             "Failed to create chemical from PubChem ID"
@@ -138,7 +137,6 @@ mod chemical_species_tests {
 
         let chemical = Chemical::new(identifier);
         thread::sleep(Duration::from_secs(10));
-
 
         assert!(chemical.is_ok(), "Failed to create chemical from name");
         let chemical = chemical.unwrap();

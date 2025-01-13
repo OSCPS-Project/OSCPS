@@ -1,6 +1,9 @@
 mod flowsheet;
 mod style;
 
+use oscps_lib::simulation::Simulation;
+use oscps_lib::simulation::Settings;
+
 use iced::widget::pane_grid::{self, PaneGrid};
 use iced::widget::{button, column, container, horizontal_space, hover, responsive, row, text};
 use iced::{Center, Element, Fill, Size, Theme};
@@ -9,6 +12,7 @@ use log::{info, debug};
 
 pub fn main() -> iced::Result {
     env_logger::init();
+    Simulation::new(Settings::new("Test Simulation".to_string()));
     info!("Starting application");
     iced::application("Open Source Chemical Process Simulator", MainWindow::update, MainWindow::view)
         .theme(|_| Theme::CatppuccinMocha)
