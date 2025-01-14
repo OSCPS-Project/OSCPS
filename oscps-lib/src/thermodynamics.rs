@@ -135,11 +135,26 @@ impl ThermoState {
         }
         mass_sum
     }
+
+
     
     /// This function will provide the enthalpy of an individual stream
-    pub fn enthalpy(& self) -> f64 {
-        let mut energy_num = 0.0;
-        energy_num
+    pub fn enthalpy(&self) -> f64 {
+        let mut total_enthalpy = 0.0;
+
+        // Need to run a for loop where I calculate the enthalpy of each species and then add it to
+        // the variable 'total_enthalpy'
+        // ASSUMPTIONS CURRENTLY MADE:
+            // No enthalpy from phase change or pressure changes
+            // when working with gases, assume that they are ideal gases
+            // Tref = 298 K & Pref = 101.325 kPa
+            // Href = 0 
+        
+        for chem in &self.mass_list {
+            // let species_enthalpy = 
+        }
+
+        total_enthalpy
     }
 }
 

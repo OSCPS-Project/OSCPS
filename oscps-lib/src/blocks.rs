@@ -102,8 +102,8 @@ impl Mixer {
     ) -> Mixer {
         Mixer {
             block_id: id,
-            x_cord: x_cord,
-            y_cord: y_cord,
+            x_cord,
+            y_cord,
             inlet_streams: in_streams,
             outlet_stream: None
 
@@ -172,7 +172,7 @@ impl Mixer {
 /// The following module holds all the unit test cases for the blocks module
 #[cfg(test)]
 mod block_tests {
-    use crate::connector::Stream;
+    // use crate::connector::Stream;
 
     use super::*;
     use uom::si::energy::kilojoule;
