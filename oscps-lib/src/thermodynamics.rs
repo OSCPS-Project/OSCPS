@@ -58,21 +58,10 @@ impl ThermodynamicConstants {
     }
 }
 
-#[allow(dead_code)]
-/// Returns a thermodynamic state, including pressure, temperature, and 
-/// mole fractions.
-pub struct ThermoState {
-    /// Pressure of the state.
-    pub pressure: Pressure,                    // Pressure in Pascals
-    /// Temperature of the state.
-    pub temperature: ThermodynamicTemperature, // Temperature in Kelvin
-    /// List of mole fractions.
-    pub mass_list: Vec<SpeciesListPair>,       // Mole fractions, typically unitless
-}
 
 #[allow(dead_code)]
 /// Species list
-pub struct SpeciesListPair {
+pub struct SpeciesQuantityPair {
     /// Chemical species
     pub chemical_species: Chemical,
     /// Mass quantity
@@ -80,15 +69,29 @@ pub struct SpeciesListPair {
 }
 
 #[allow(dead_code)]
+/// # ThermoState
+/// Returns a thermodynamic state, including pressure, temperature, and 
+/// mole fractions.
+/// This struct will be used for streams in the flow diagram
+pub struct ThermoState {
+    /// Pressure of the state.
+    pub pressure: Pressure,                    // Pressure in Pascals
+    /// Temperature of the state.
+    pub temperature: ThermodynamicTemperature, // Temperature in Kelvin
+    /// List of mole fractions.
+    pub mass_list: Vec<SpeciesQuantityPair>,       // Mole fractions, typically unitless
+}
+
+
+#[allow(dead_code)]
 /// Implementation of ThermoState
-/// This struct holds the functionality to perform thermodynamic calculations for a stream or for
-/// an individual species
+/// This struct holds the functionality to perform thermodynamic calculations for streams
 impl ThermoState {
     /// Constructor for creating a ThermoState
     pub fn new(
         pressure: f64,    // in Pascals
         temperature: f64, // in Kelvin
-        mass_list: Vec<SpeciesListPair>,
+        mass_list: Vec<SpeciesQuantityPair>,
     ) -> Self {
         ThermoState {
             pressure: Pressure::new::<pascal>(pressure),
@@ -123,7 +126,38 @@ impl ThermoState {
         const R: f64 = 8.314; // J/(mol·K)
         (n * R * t) / v
     }
+    
+    /// this function will return the total mass for an individual stream
+    pub fn total_mass(& self) -> f64 {
+        let mut mass_sum  = 0.0;
+        for chem in &self.mass_list {
+            mass_sum += chem.mass_quantity.get::<kilogram>();
+        }
+        mass_sum
+    }
+
+
+    
+    /// This function will provide the enthalpy of an individual stream
+    pub fn enthalpy(&self) -> f64 {
+        let mut total_enthalpy = 0.0;
+
+        // Need to run a for loop where I calculate the enthalpy of each species and then add it to
+        // the variable 'total_enthalpy'
+        // ASSUMPTIONS CURRENTLY MADE:
+            // No enthalpy from phase change or pressure changes
+            // when working with gases, assume that they are ideal gases
+            // Tref = 298 K & Pref = 101.325 kPa
+            // Href = 0 
+        
+        for chem in &self.mass_list {
+            // let species_enthalpy = 
+        }
+
+        total_enthalpy
+    }
 }
+
 
 #[cfg(test)]
 mod thermo_tests {
@@ -149,7 +183,7 @@ mod thermo_tests {
         };
         thread::sleep(Duration::from_secs(10));
         let water_mass = Mass::new::<kilogram>(2.0);
-        let water_species_pair = SpeciesListPair {
+        let water_species_pair = SpeciesQuantityPair {
             chemical_species: water,
             mass_quantity: water_mass,
         };
@@ -205,13 +239,13 @@ mod thermo_tests {
         thread::sleep(Duration::from_secs(10));
         
         let water_mass = Mass::new::<kilogram>(2.0);
-        let water_species_pair = SpeciesListPair {
+        let water_species_pair = SpeciesQuantityPair {
             chemical_species: water,
             mass_quantity: water_mass,
         };
 
         let anisidine_mass = Mass::new::<kilogram>(8.0);
-        let anisidine_species_pair = SpeciesListPair {
+        let anisidine_species_pair = SpeciesQuantityPair {
             chemical_species: anisdine,
             mass_quantity: anisidine_mass,
         };

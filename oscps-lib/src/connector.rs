@@ -1,54 +1,37 @@
 //! # Connector
 //!
-//! Two types of connectors represent different energy types of streams
-//! One is a mass connector, Mconnector, which represents mass flow rates
-//! 
-//! The other is Econnector, which represents energy flow rates.
 
-#[allow(dead_code)]
-/// A connector for storing mass information. This includes an ID and a 
-/// total mass flow rate.
-///
-/// TODO: These should be consolidated into a single connector.
-pub struct Mconnector {
-    /// Mass connector ID
-    pub m_conn_id: String,
-    /// Total mass flow rate
-    pub m_flow_total: f64,
+use crate::thermodynamics::ThermoState; 
+
+/// # Stream
+/// 
+/// Struct to hold stream information
+pub struct Stream {
+    // TODO: IDs must be unique within the flowsheet. Consider using integers
+    // as IDs and having a separate field for the name of a connector. Adopt
+    // a similar scheme for blocks.
+    /// ID of the stream. 
+    pub s_id : String,
+    /// Instance of ThermoState struct that holds thermodynamic information.
+    pub thermo : Option<ThermoState>,
+    // TODO: Change these from strings to integers, or better yet, 
+    // references to the source and destination blocks, to minimize
+    // computation time spent on looking for sources and destinations.
+    /// ID of source block
+    pub from_block : String,
+    /// ID of destination block
+    pub to_block : String
 }
 
-#[allow(dead_code)]
-/// Functions implemented on Mconnectors.
-impl Mconnector {
-    /// Constructor for a connector.
-    pub fn new(id: String) -> Mconnector {
-        Mconnector {
-            m_conn_id: id,
-            m_flow_total: 0.0,
-        }
-    }
-}
 
-#[allow(dead_code)]
-/// A connector for storing energy information. This includes an ID and a 
-/// total energy flow rate.
-///
-/// TODO: These should be consolidated into a single connector.
-pub struct Econnector {
-    /// Energy connector ID.
-    pub e_conn_id: String,
-    /// Total energy flow rate.
-    pub energy_flow_total: f64,
-}
-
-#[allow(dead_code)]
-/// Functions implemented on Econnectors.
-impl Econnector {
-    /// Constructor for a connector.
-    pub fn new(id: String) -> Econnector {
-        Econnector {
-            e_conn_id: id,
-            energy_flow_total: 0.0,
+impl Stream {
+    /// Constructor for 'Stream' struct
+    pub fn new(id: String, from_blk_id : String, to_blk_id : String) -> Stream {
+        Stream {
+            s_id : id,
+            thermo : None,
+            from_block : from_blk_id,
+            to_block : to_blk_id
         }
     }
 }
