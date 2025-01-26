@@ -26,9 +26,14 @@ use uom::si::mass::kilogram;
 /// for a souce block, these functions can simply be dummy functions for this special case.
 /// For safety, they can throw errors if called, but they should never be used.
 pub trait Block {
+    /// Connect an input to a block. TODO: Have this function create the input stream and return a
+    /// reference to it. Then use that stream reference to connect an output.
     fn connect_input(&mut self, stream: &mut Stream) -> Result<(), &str>;
+    /// Disconnect an input to a block
     fn disconnect_input(&mut self, stream: &mut Stream) -> Result<(), &str>;
+    /// Connect an output to a block
     fn connect_output(&mut self, stream: &mut Stream) -> Result<(), &str>;
+    /// Disconnect an output to a block
     fn disconnect_output(&mut self, stream: &mut Stream) -> Result<(), &str>;
     // TODO: Add additional functions that all Blocks should implement
 }
@@ -213,6 +218,13 @@ impl MassBalance for Mixer {}
 
 /// Applying the energy balance trait to the Mixer Block
 impl EnergyBalance for Mixer {}
+
+/// Block implements Clone
+impl Clone for Box<dyn Block> {
+    fn clone(&self) -> Self {
+        todo!();
+    }
+}
 
 /// # Block Tests
 ///
