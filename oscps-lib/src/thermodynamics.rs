@@ -8,9 +8,10 @@
 //! implemented in the future.
 
 use crate::component::Chemical;
-use uom::si::f64::*;
+use uom::si::{f64::*, Quantity};
 use uom::si::mass::kilogram;
 use uom::si::pressure::pascal;
+// use uom::si::temperature_interval::kelvin;
 use uom::si::thermodynamic_temperature::kelvin;
 
 #[allow(dead_code)]
@@ -66,6 +67,12 @@ pub struct SpeciesQuantityPair {
     pub chemical_species: Chemical,
     /// Mass quantity
     pub mass_quantity: Mass,
+
+    ///Heat capacity constants (for enthalpy calculations)
+    pub const_a: f64,
+    pub const_b: f64,
+    pub const_c: f64,
+    pub const_d: f64
 }
 
 #[allow(dead_code)]
@@ -136,11 +143,12 @@ impl ThermoState {
         mass_sum
     }
 
-
-    
     /// This function will provide the enthalpy of an individual stream
     pub fn enthalpy(&self) -> f64 {
         let mut total_enthalpy = 0.0;
+        let t_ref = 298.15; //reference temperature 
+        let h_ref = 0.0; //Reference enthalpy
+        
 
         // Need to run a for loop where I calculate the enthalpy of each species and then add it to
         // the variable 'total_enthalpy'
@@ -151,7 +159,18 @@ impl ThermoState {
             // Href = 0 
         
         for chem in &self.mass_list {
-            // let species_enthalpy = 
+            let mut cp_ref = 0.0;
+            let mut cp_t = 0.0;
+            if(chem.const_c != 0.0){
+                cp_ref = chem.const_a * t_ref + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * t_ref.powi(2);
+                cp_t = chem.const_a * self.temperature.get::<kelvin>() + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * self.temperature.get::<kelvin>().powf(2.0) + (1.0 / 3.0) * (chem.const_c / (10.0f64.powf(6.0))) * self.temperature.get::<kelvin>().powf(3.0);
+            }
+            else{
+                cp_ref = chem.const_a * t_ref + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * t_ref.powi(2) + (-1.0) * (chem.const_d / (10.0f64.powf(-5.0))) * t_ref.powi(-1);
+                cp_t = chem.const_a * self.temperature.get::<kelvin>() + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * self.temperature.get::<kelvin>().powf(2.0) + (-1.0) * (chem.const_d / (10.0f64.powf(-5.0))) * self.temperature.get::<kelvin>().powf(-1.0);
+            }
+            let species_enthalpy = h_ref + (cp_t - cp_ref);
+            total_enthalpy += species_enthalpy;
         }
 
         total_enthalpy
@@ -186,6 +205,10 @@ mod thermo_tests {
         let water_species_pair = SpeciesQuantityPair {
             chemical_species: water,
             mass_quantity: water_mass,
+            const_a: 1.0,
+            const_b: 1.0,
+            const_c: 1.0,
+            const_d: 0.0
         };
 
         // Create ThermoState
