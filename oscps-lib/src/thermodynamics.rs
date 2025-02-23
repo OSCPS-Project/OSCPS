@@ -11,7 +11,6 @@ use crate::component::Chemical;
 use uom::si::{f64::*, Quantity};
 use uom::si::mass::kilogram;
 use uom::si::pressure::pascal;
-// use uom::si::temperature_interval::kelvin;
 use uom::si::thermodynamic_temperature::kelvin;
 
 #[allow(dead_code)]
@@ -144,24 +143,24 @@ impl ThermoState {
     }
 
     /// This function will provide the enthalpy of an individual stream
+    #[warn(unused_assignments)]
     pub fn enthalpy(&self) -> f64 {
         let mut total_enthalpy = 0.0;
         let t_ref = 298.15; //reference temperature 
         let h_ref = 0.0; //Reference enthalpy
-        
+        let mut cp_ref;
+        let mut cp_t;
 
         // Need to run a for loop where I calculate the enthalpy of each species and then add it to
         // the variable 'total_enthalpy'
         // ASSUMPTIONS CURRENTLY MADE:
-            // No enthalpy from phase change or pressure changes
+            // No enthalpy from phase change
             // when working with gases, assume that they are ideal gases
             // Tref = 298 K & Pref = 101.325 kPa
             // Href = 0 
         
         for chem in &self.mass_list {
-            let mut cp_ref = 0.0;
-            let mut cp_t = 0.0;
-            if(chem.const_c != 0.0){
+            if chem.const_c != 0.0 {
                 cp_ref = chem.const_a * t_ref + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * t_ref.powi(2);
                 cp_t = chem.const_a * self.temperature.get::<kelvin>() + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * self.temperature.get::<kelvin>().powf(2.0) + (1.0 / 3.0) * (chem.const_c / (10.0f64.powf(6.0))) * self.temperature.get::<kelvin>().powf(3.0);
             }
