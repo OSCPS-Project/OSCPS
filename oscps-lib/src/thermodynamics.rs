@@ -8,10 +8,12 @@
 //! implemented in the future.
 
 use crate::component::Chemical;
-use uom::si::{f64::*, Quantity};
-use uom::si::mass::kilogram;
-use uom::si::pressure::pascal;
-use uom::si::thermodynamic_temperature::kelvin;
+use uom::si::f64::*;
+use uom::si::mass;
+use uom::si::pressure;
+use uom::si::thermodynamic_temperature;
+use uom::si::energy;
+use uom::si::amount_of_substance::mole;
 
 #[allow(dead_code)]
 /// Struct for storing physical constants for thermodynamics.
@@ -45,13 +47,13 @@ impl ThermodynamicConstants {
     pub fn value(&self) -> ConstantValue {
         match self {
             ThermodynamicConstants::UniversalGasConstant => {
-                ConstantValue::Pressure(Pressure::new::<pascal>(8.314462618))
+                ConstantValue::Pressure(Pressure::new::<pressure::pascal>(8.314462618))
             }
             ThermodynamicConstants::StandardTemperature => {
-                ConstantValue::Temperature(ThermodynamicTemperature::new::<kelvin>(273.15))
+                ConstantValue::Temperature(ThermodynamicTemperature::new::<thermodynamic_temperature::kelvin>(273.15))
             }
             ThermodynamicConstants::StandardPressure => {
-                ConstantValue::Pressure(Pressure::new::<pascal>(101_325.0))
+                ConstantValue::Pressure(Pressure::new::<pressure::pascal>(101_325.0))
             }
             ThermodynamicConstants::AvogadroNumber => ConstantValue::Dimensionless(6.02214076e23),
         }
@@ -66,11 +68,13 @@ pub struct SpeciesQuantityPair {
     pub chemical_species: Chemical,
     /// Mass quantity
     pub mass_quantity: Mass,
-
-    ///Heat capacity constants (for enthalpy calculations)
+    ///Heat capacity Coefficient A
     pub const_a: f64,
+    ///Heat capacity Coefficient B
     pub const_b: f64,
+    ///Heat capacity Coefficient C
     pub const_c: f64,
+    ///Heat capacity Coefficient D
     pub const_d: f64
 }
 
@@ -100,8 +104,8 @@ impl ThermoState {
         mass_list: Vec<SpeciesQuantityPair>,
     ) -> Self {
         ThermoState {
-            pressure: Pressure::new::<pascal>(pressure),
-            temperature: ThermodynamicTemperature::new::<kelvin>(temperature),
+            pressure: Pressure::new::<pressure::pascal>(pressure),
+            temperature: ThermodynamicTemperature::new::<thermodynamic_temperature::kelvin>(temperature),
             mass_list,
         }
     }
@@ -112,11 +116,11 @@ impl ThermoState {
         let mut component_mass = 0.0;
 
         for chem in &self.mass_list {
-            total_mass += chem.mass_quantity.get::<kilogram>();
+            total_mass += chem.mass_quantity.get::<mass::kilogram>();
 
             if let Some(cids) = Some(chem.chemical_species.pubchem_obj.cids().unwrap()[0]) {
                 if cids == species.pubchem_obj.cids().unwrap_or_default()[0] {
-                    component_mass = chem.mass_quantity.get::<kilogram>();
+                    component_mass = chem.mass_quantity.get::<mass::kilogram>();
                 }
             }
         }
@@ -137,7 +141,7 @@ impl ThermoState {
     pub fn total_mass(& self) -> f64 {
         let mut mass_sum  = 0.0;
         for chem in &self.mass_list {
-            mass_sum += chem.mass_quantity.get::<kilogram>();
+            mass_sum += chem.mass_quantity.get::<mass::kilogram>();
         }
         mass_sum
     }
@@ -162,11 +166,11 @@ impl ThermoState {
         for chem in &self.mass_list {
             if chem.const_c != 0.0 {
                 cp_ref = chem.const_a * t_ref + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * t_ref.powi(2);
-                cp_t = chem.const_a * self.temperature.get::<kelvin>() + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * self.temperature.get::<kelvin>().powf(2.0) + (1.0 / 3.0) * (chem.const_c / (10.0f64.powf(6.0))) * self.temperature.get::<kelvin>().powf(3.0);
+                cp_t = chem.const_a * self.temperature.get::<thermodynamic_temperature::kelvin>() + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>().powf(2.0) + (1.0 / 3.0) * (chem.const_c / (10.0f64.powf(6.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>().powf(3.0);
             }
             else{
                 cp_ref = chem.const_a * t_ref + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * t_ref.powi(2) + (-1.0) * (chem.const_d / (10.0f64.powf(-5.0))) * t_ref.powi(-1);
-                cp_t = chem.const_a * self.temperature.get::<kelvin>() + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * self.temperature.get::<kelvin>().powf(2.0) + (-1.0) * (chem.const_d / (10.0f64.powf(-5.0))) * self.temperature.get::<kelvin>().powf(-1.0);
+                cp_t = chem.const_a * self.temperature.get::<thermodynamic_temperature::kelvin>() + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>().powf(2.0) + (-1.0) * (chem.const_d / (10.0f64.powf(-5.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>().powf(-1.0);
             }
             let species_enthalpy = h_ref + (cp_t - cp_ref);
             total_enthalpy += species_enthalpy;
@@ -175,6 +179,41 @@ impl ThermoState {
         total_enthalpy
     }
 }
+
+///Thermodynamic Packages.
+///
+///#ThermoPackage
+///Will be a common trait for all the thermodynamic packages
+///Will include functions common to thermodynamic packages
+///Will also enable to user to switch between thermodynamic packages within the ThermoState struct
+///(the thermodynamic packages will be structs)
+
+pub trait ThermoPackage{
+    ///Calculating the Enthalpy
+    fn enthalpy(&self) -> Energy;
+    ///Calculating the Entropy
+    fn entropy(&self) -> Energy;
+    /// Calculate amount of moles
+    fn calculate_moles(&self) -> mole;
+    ///Calculate pressure
+    fn pressure(&self) -> Pressure;
+    ///Calculate temperature
+    fn temperature(&self) -> ThermodynamicTemperature;
+    ///Calculate volume
+    fn volume(&self) -> Volume;
+    ///Calculate heat capacity
+    fn heat_capacity(&self) -> HeatCapacity;
+    ///Calculate internal temperature
+    fn internal_energy(&self) -> Energy;
+    ///Calculate gibbs free energy
+    fn gibbs_free_energy(&self) -> Energy;
+}
+
+///#IdealThermoPackage
+///
+///Will contain the ideal thermodynamic equations for very basic thermodynamic modelling
+
+
 
 
 #[cfg(test)]
