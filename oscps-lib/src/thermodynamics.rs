@@ -10,10 +10,13 @@
 use crate::component::Chemical;
 use uom::si::f64::*;
 use uom::si::mass;
+use uom::si::molar_heat_capacity;
 use uom::si::pressure;
 use uom::si::thermodynamic_temperature;
 use uom::si::energy;
-use uom::si::amount_of_substance::mole;
+use uom::si::amount_of_substance;
+use uom::si::volume;
+
 
 #[allow(dead_code)]
 /// Struct for storing physical constants for thermodynamics.
@@ -29,33 +32,24 @@ pub enum ThermodynamicConstants {
     AvogadroNumber,       // N_A
 }
 
-#[allow(dead_code)]
-/// Enum for representing different types of thermodynamic constant values
-pub enum ConstantValue {
-    /// Pressure value
-    Pressure(Pressure),
-    /// Temperature value
-    Temperature(ThermodynamicTemperature),
-    /// Dimensionless value
-    Dimensionless(f64),
-}
-
 #[allow(dead_code)] 
 /// Implements values of thermodynamic constants.
 impl ThermodynamicConstants {
     /// Returns the value of the thermodynamic constant with its appropriate type.
-    pub fn value(&self) -> ConstantValue {
+    pub fn value(&self) -> Box<dyn std::any::Any> {
         match self {
             ThermodynamicConstants::UniversalGasConstant => {
-                ConstantValue::Pressure(Pressure::new::<pressure::pascal>(8.314462618))
-            }
+                let r = 8.314462618;
+                let constant = Energy::new::<energy::joule>(r) / (ThermodynamicTemperature::new::<thermodynamic_temperature::kelvin>(1.0)* AmountOfSubstance::new::<amount_of_substance::mole>(1.0));
+                Box::new(constant)
+            },
             ThermodynamicConstants::StandardTemperature => {
-                ConstantValue::Temperature(ThermodynamicTemperature::new::<thermodynamic_temperature::kelvin>(273.15))
+                Box::new(ThermodynamicTemperature::new::<thermodynamic_temperature::kelvin>(273.15))
             }
             ThermodynamicConstants::StandardPressure => {
-                ConstantValue::Pressure(Pressure::new::<pressure::pascal>(101_325.0))
-            }
-            ThermodynamicConstants::AvogadroNumber => ConstantValue::Dimensionless(6.02214076e23),
+                Box::new(Pressure::new::<pressure::pascal>(101_325.0))
+            },
+            ThermodynamicConstants::AvogadroNumber => Box::new(6.02214076e23), //Units: particles/mole
         }
     }
 }
@@ -68,6 +62,10 @@ pub struct SpeciesQuantityPair {
     pub chemical_species: Chemical,
     /// Mass quantity
     pub mass_quantity: Mass,
+    /// Molar quantity
+    pub molar_quantity: AmountOfSubstance,
+    ///volumetric quantity
+    pub vol_quantity: Volume,
     ///Heat capacity Coefficient A
     pub const_a: f64,
     ///Heat capacity Coefficient B
@@ -130,13 +128,6 @@ impl ThermoState {
             _ => Some(component_mass / total_mass),
         }
     }
-
-    /// Determine ideal gas pressure
-    fn ideal_gas_pressure(&self, n: f64, t: f64, v: f64) -> f64 {
-        const R: f64 = 8.314; // J/(mol·K)
-        (n * R * t) / v
-    }
-    
     /// this function will return the total mass for an individual stream
     pub fn total_mass(& self) -> f64 {
         let mut mass_sum  = 0.0;
@@ -144,39 +135,6 @@ impl ThermoState {
             mass_sum += chem.mass_quantity.get::<mass::kilogram>();
         }
         mass_sum
-    }
-
-    /// This function will provide the enthalpy of an individual stream
-    #[warn(unused_assignments)]
-    pub fn enthalpy(&self) -> f64 {
-        let mut total_enthalpy = 0.0;
-        let t_ref = 298.15; //reference temperature 
-        let h_ref = 0.0; //Reference enthalpy
-        let mut cp_ref;
-        let mut cp_t;
-
-        // Need to run a for loop where I calculate the enthalpy of each species and then add it to
-        // the variable 'total_enthalpy'
-        // ASSUMPTIONS CURRENTLY MADE:
-            // No enthalpy from phase change
-            // when working with gases, assume that they are ideal gases
-            // Tref = 298 K & Pref = 101.325 kPa
-            // Href = 0 
-        
-        for chem in &self.mass_list {
-            if chem.const_c != 0.0 {
-                cp_ref = chem.const_a * t_ref + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * t_ref.powi(2);
-                cp_t = chem.const_a * self.temperature.get::<thermodynamic_temperature::kelvin>() + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>().powf(2.0) + (1.0 / 3.0) * (chem.const_c / (10.0f64.powf(6.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>().powf(3.0);
-            }
-            else{
-                cp_ref = chem.const_a * t_ref + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * t_ref.powi(2) + (-1.0) * (chem.const_d / (10.0f64.powf(-5.0))) * t_ref.powi(-1);
-                cp_t = chem.const_a * self.temperature.get::<thermodynamic_temperature::kelvin>() + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>().powf(2.0) + (-1.0) * (chem.const_d / (10.0f64.powf(-5.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>().powf(-1.0);
-            }
-            let species_enthalpy = h_ref + (cp_t - cp_ref);
-            total_enthalpy += species_enthalpy;
-        }
-
-        total_enthalpy
     }
 }
 
@@ -194,7 +152,7 @@ pub trait ThermoPackage{
     ///Calculating the Entropy
     fn entropy(&self) -> Energy;
     /// Calculate amount of moles
-    fn calculate_moles(&self) -> mole;
+    fn calculate_moles(&self) -> AmountOfSubstance;
     ///Calculate pressure
     fn pressure(&self) -> Pressure;
     ///Calculate temperature
@@ -209,9 +167,72 @@ pub trait ThermoPackage{
     fn gibbs_free_energy(&self) -> Energy;
 }
 
-///#IdealThermoPackage
+///#IdealGasPackage
 ///
-///Will contain the ideal thermodynamic equations for very basic thermodynamic modelling
+///Will contain equations related to ideal gases
+
+pub struct IdealGasPackage {
+    pub temperature : ThermodynamicTemperature,
+    pub pressure : Pressure,
+    pub species_list : Vec<SpeciesQuantityPair>,
+    pub total_mass : Mass,
+    pub total_vol : Volume,
+    pub total_mol : AmountOfSubstance
+}
+///Implementing functions specific to the IdealGasPackage
+impl IdealGasPackage {
+    ///Constructor
+    pub fn new(temperature: ThermodynamicTemperature, pressure : Pressure, species_list : Vec<SpeciesQuantityPair>, total_mass : Mass, total_vol : Volume, total_mol : AmountOfSubstance) -> IdealGasPackage {
+        IdealGasPackage {
+            temperature,
+            pressure,
+            species_list,
+            total_mass,
+            total_vol,
+            total_mol
+        }
+    }
+}
+/// Implementing the ThermoPackage trait for the IdealGasPackage
+impl ThermoPackage for IdealGasPackage {
+    ///Calculating enthalpy
+    fn enthalpy(&self) -> Energy {
+        let mut total_enthalpy = 0.0;
+        let t_ref = 298.15; //reference temperature 
+        let h_ref = 0.0; //Reference enthalpy
+        let mut cp_ref;
+        let mut cp_t;
+
+        // Need to run a for loop where I calculate the enthalpy of each species and then add it to
+        // the variable 'total_enthalpy'
+        // ASSUMPTIONS CURRENTLY MADE:
+            // No enthalpy from phase change
+            // when working with gases, assume that they are ideal gases
+            // Tref = 298 K & Pref = 101.325 kPa
+            // Href = 0 
+        
+        for chem in &self.species_list {
+            if chem.const_c != 0.0 {
+                cp_ref = chem.const_a * t_ref + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * t_ref.powi(2);
+                cp_t = chem.const_a * self.temperature.get::<thermodynamic_temperature::kelvin>() + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>().powf(2.0) + (1.0 / 3.0) * (chem.const_c / (10.0f64.powf(6.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>().powf(3.0);
+            }
+            else{
+                cp_ref = chem.const_a * t_ref + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * t_ref.powi(2) + (-1.0) * (chem.const_d / (10.0f64.powf(-5.0))) * t_ref.powi(-1);
+                cp_t = chem.const_a * self.temperature.get::<thermodynamic_temperature::kelvin>() + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>().powf(2.0) + (-1.0) * (chem.const_d / (10.0f64.powf(-5.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>().powf(-1.0);
+            }
+            let species_enthalpy = h_ref + (cp_t - cp_ref);
+            total_enthalpy += species_enthalpy;
+        }
+
+        Energy::new::<energy::joule>(total_enthalpy)
+    }
+    /// Determine ideal gas pressure
+    fn pressure(&self) -> Pressure {
+        let r = ThermodynamicConstants::UniversalGasConstant.value().downcast::<MolarHeatCapacity>().unwrap();
+        let ideal_pressure = (self.total_mol.get::<amount_of_substance::mole>() * r.get::<molar_heat_capacity::joule_per_kelvin_mole>() * self.temperature.get::<thermodynamic_temperature::kelvin>()) / (self.total_vol.get::<volume::cubic_meter>());
+        Pressure::new::<pressure::pascal>(ideal_pressure)
+    }
+}
 
 
 
