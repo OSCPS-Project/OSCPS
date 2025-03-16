@@ -88,6 +88,8 @@ pub struct ThermoState {
     pub temperature: ThermodynamicTemperature, // Temperature in Kelvin
     /// List of mole fractions.
     pub mass_list: Vec<SpeciesQuantityPair>,       // Mole fractions, typically unitless
+    ///Thermo Package
+    pub thermodynamic_package : Box<dyn ThermoPackage> 
 }
 
 
@@ -100,11 +102,13 @@ impl ThermoState {
         pressure: f64,    // in Pascals
         temperature: f64, // in Kelvin
         mass_list: Vec<SpeciesQuantityPair>,
+        thermo_package : Box<dyn ThermoPackage>
     ) -> Self {
         ThermoState {
             pressure: Pressure::new::<pressure::pascal>(pressure),
             temperature: ThermodynamicTemperature::new::<thermodynamic_temperature::kelvin>(temperature),
             mass_list,
+            thermodynamic_package : thermo_package
         }
     }
 
