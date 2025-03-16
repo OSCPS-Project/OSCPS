@@ -9,22 +9,26 @@
 use crate::connector;
 use crate::connector::Stream;
 use once_cell::sync::Lazy;
-use uom::si::energy::joule;
-use uom::si::f64::Energy;
-use uom::si::f64::Mass;
-use uom::si::mass::kilogram;
+use uom::si::f64::*;
+use uom::si::mass;
+use uom::si::molar_heat_capacity;
+use uom::si::pressure;
+use uom::si::thermodynamic_temperature;
+use uom::si::energy;
+use uom::si::amount_of_substance;
+use uom::si::volume;
 
 #[allow(dead_code)]
 /// Minimum error allowed for energy difference. 
 /// TODO: Change this to a relative scale instead of an absolute scale.
 pub static TOLERENCE_ENERGY: Lazy<Energy> = 
-    Lazy::new(|| Energy::new::<joule>(5.0));
+    Lazy::new(|| Energy::new::<energy::joule>(5.0));
 
 #[allow(dead_code)]
 /// Minimum error allowed for mass difference. 
 /// TODO: Change this to a relative scale instead of an absolute scale.
 pub static TOLERENCE_MASS: Lazy<Mass> = 
-    Lazy::new(|| Mass::new::<kilogram>(5.0));
+    Lazy::new(|| Mass::new::<mass::kilogram>(5.0));
 
 #[allow(dead_code)]
 /// # MassBalance
@@ -40,10 +44,10 @@ pub trait MassBalance {
     /// fraction of the total inlet mass. This can be an adjustable parameter.
     /// Smaller takes longer to converge, but is more
     fn mass_balance_check(&self, mass_in: Mass, mass_out: Mass) -> bool {
-        let mass_in_kg = mass_in.get::<kilogram>();
-        let mass_out_kg = mass_out.get::<kilogram>();
+        let mass_in_kg = mass_in.get::<mass::kilogram>();
+        let mass_out_kg = mass_out.get::<mass::kilogram>();
         let mass_difference = mass_in_kg - mass_out_kg;
-        mass_difference <= TOLERENCE_MASS.get::<kilogram>()
+        mass_difference <= TOLERENCE_MASS.get::<mass::kilogram>()
     }
 }
 
@@ -60,10 +64,10 @@ pub trait EnergyBalance {
     /// Also implement changes in issue #19.
     fn energy_balance_check(&self, energy_in: Energy, energy_out: Energy) -> 
         bool {
-        let energy_in_joules = energy_in.get::<joule>();
-        let energy_out_joules = energy_out.get::<joule>();
+        let energy_in_joules = energy_in.get::<energy::joule>();
+        let energy_out_joules = energy_out.get::<energy::joule>();
         let energy_difference = energy_in_joules - energy_out_joules;
-        energy_difference <= TOLERENCE_ENERGY.get::<joule>()
+        energy_difference <= TOLERENCE_ENERGY.get::<energy::joule>()
     }
 }
 
@@ -149,7 +153,7 @@ impl Mixer {
         let mut energy_flow_sum: f64 = 0.0;
 
         for s in self.inlet_streams.iter() {
-            energy_flow_sum += s.thermo.as_ref().unwrap().enthalpy();
+            energy_flow_sum += (*(s.thermo.as_ref().unwrap().thermodynamic_package)).enthalpy().get::<energy::joule>();
         }
         Some(energy_flow_sum)
     }
