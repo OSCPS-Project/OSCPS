@@ -68,6 +68,8 @@ pub struct SpeciesQuantityPair {
     pub molar_quantity: AmountOfSubstance,
     ///volumetric quantity
     pub vol_quantity: Volume,
+    /// partial pressure
+    pub partial_pressure : Pressure,
     ///Heat capacity Coefficient A
     pub const_a: f64,
     ///Heat capacity Coefficient B
