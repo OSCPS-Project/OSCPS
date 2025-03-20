@@ -2,6 +2,7 @@
 ///
 ///Will contain equations related to ideal gases
 use crate::thermodynamics::*;
+use std::sync::Arc;
 use uom::si::f64::*;
 use uom::si::mass;
 use uom::si::molar_heat_capacity;
@@ -13,17 +14,23 @@ use uom::si::volume;
 
 
 pub struct IdealGasPackage {
-    pub temperature : ThermodynamicTemperature,
-    pub pressure : Pressure,
-    pub species_list : Vec<SpeciesQuantityPair>,
-    pub total_mass : Mass,
-    pub total_vol : Volume,
-    pub total_mol : AmountOfSubstance
+    pub temperature : Arc<ThermodynamicTemperature>,
+    pub pressure : Arc<Pressure>,
+    pub species_list : Vec<Arc<ComponentData>>,
+    pub total_mass : Arc<Mass>,
+    pub total_vol : Arc<Volume>,
+    pub total_mol : Arc<AmountOfSubstance>
 }
 ///Implementing functions specific to the IdealGasPackage
 impl IdealGasPackage {
     ///Constructor
-    pub fn new(temperature: ThermodynamicTemperature, pressure : Pressure, species_list : Vec<SpeciesQuantityPair>, total_mass : Mass, total_vol : Volume, total_mol : AmountOfSubstance) -> IdealGasPackage {
+    pub fn new(
+        temperature: Arc<ThermodynamicTemperature>, 
+        pressure : Arc<Pressure>, 
+        species_list : Vec<Arc<ComponentData>>, 
+        total_mass : Arc<Mass>, 
+        total_vol : Arc<Volume>, 
+        total_mol : Arc<AmountOfSubstance>) -> Self {
         IdealGasPackage {
             temperature,
             pressure,
@@ -52,7 +59,8 @@ impl ThermoPackage for IdealGasPackage {
         let mut cp_t;
         let r = ThermodynamicConstants::UniversalGasConstant.value().downcast::<MolarHeatCapacity>().unwrap();
         
-        for chem in &self.species_list {
+        for chem_object in &self.species_list {
+            let chem = &(*chem_object).chemical_species.properties;
             if chem.const_c != 0.0 {
                 cp_ref = chem.const_a * t_ref + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * t_ref.powi(2);
                 cp_t = chem.const_a * self.temperature.get::<thermodynamic_temperature::kelvin>() + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>().powf(2.0) + (1.0 / 3.0) * (chem.const_c / (10.0f64.powf(6.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>().powf(3.0);
@@ -86,7 +94,8 @@ impl ThermoPackage for IdealGasPackage {
         let r = ThermodynamicConstants::UniversalGasConstant.value().downcast::<MolarHeatCapacity>().unwrap();
         let p_o = 1.0_f64; // units atm
         
-        for chem in &self.species_list {
+        for chem_object in &self.species_list {
+            let chem = &(*chem_object).chemical_species.properties;
             if chem.const_c != 0.0 {
                 cp_ref = chem.const_a * t_ref.ln() + (chem.const_b / (10.0f64.powf(3.0))) * t_ref;
                 cp_t = chem.const_a * self.temperature.get::<thermodynamic_temperature::kelvin>().ln() +  (chem.const_b / (10.0f64.powf(3.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>() + (1.0 / 2.0) * (chem.const_c / (10.0f64.powf(6.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>().powf(2.0);
@@ -96,7 +105,7 @@ impl ThermoPackage for IdealGasPackage {
                 cp_t = chem.const_a * self.temperature.get::<thermodynamic_temperature::kelvin>().ln() +  (chem.const_b / (10.0f64.powf(3.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>() + (-1.0/2.0) * (chem.const_d / (10.0f64.powf(-5.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>().powf(-2.0);
             }
             let integral_solve_species = cp_t - cp_ref;
-            let pressure_ratio = chem.partial_pressure.get::<pressure::atmosphere>() / p_o;
+            let pressure_ratio = (*chem_object).partial_pressure.get::<pressure::atmosphere>() / p_o;
 
             entropy_total += r.get::<molar_heat_capacity::joule_per_kelvin_mole>()*(integral_solve_species - pressure_ratio);
         }
