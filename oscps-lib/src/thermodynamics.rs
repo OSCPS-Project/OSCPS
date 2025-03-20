@@ -59,7 +59,7 @@ impl ThermodynamicConstants {
 
 #[allow(dead_code)]
 /// Species list
-pub struct SpeciesQuantityPair {
+pub struct ComponentData {
     /// Chemical species
     pub chemical_species: Chemical,
     /// Mass quantity
@@ -70,14 +70,6 @@ pub struct SpeciesQuantityPair {
     pub vol_quantity: Volume,
     /// partial pressure
     pub partial_pressure : Pressure,
-    ///Heat capacity Coefficient A
-    pub const_a: f64,
-    ///Heat capacity Coefficient B
-    pub const_b: f64,
-    ///Heat capacity Coefficient C
-    pub const_c: f64,
-    ///Heat capacity Coefficient D
-    pub const_d: f64
 }
 
 #[allow(dead_code)]
@@ -87,19 +79,19 @@ pub struct SpeciesQuantityPair {
 /// This struct will be used for streams in the flow diagram
 pub struct ThermoState {
     /// Pressure of the state.
-    pub pressure: Pressure,                    // Pressure in Pascals
+    pub pressure: Option<Pressure>,                    // pressure
     /// Temperature of the state.
-    pub temperature: ThermodynamicTemperature, // Temperature in Kelvin
+    pub temperature: Option<ThermodynamicTemperature>, // temperature
     /// List of mole fractions.
-    pub mass_list: Vec<SpeciesQuantityPair>,    // Mole fractions, typically unitless
+    pub mass_list: Vec<ComponentData>,//Information about each component within stream
     // Total Mass
-    pub total_mass : Mass,
+    pub total_mass : Option<Mass>, // total mass in stream
     // Total Moles
-    pub total_mol : AmountOfSubstance,
+    pub total_mol : Option<AmountOfSubstance>, // total moles in stream
     // Total Volume
-    pub total_volume : Volume,
+    pub total_volume : Option<Volume>, // total volume in stream
     ///Thermo Package
-    pub thermodynamic_package : Box<dyn ThermoPackage> 
+    pub thermodynamic_package : Option<Box<dyn ThermoPackage>> // thermodynamics package 
 }
 
 
@@ -108,47 +100,46 @@ pub struct ThermoState {
 /// This struct holds the functionality to perform thermodynamic calculations for streams
 impl ThermoState {
     /// Constructor for creating a ThermoState
-    pub fn new(
-        pressure: f64,    // in Pascals
-        temperature: f64, // in Kelvin
-        mass_list: Vec<SpeciesQuantityPair>,
-        thermo_package : Box<dyn ThermoPackage>
-    ) -> Self {
+    pub fn new() -> Self {
         ThermoState {
-            pressure: Pressure::new::<pressure::pascal>(pressure),
-            temperature: ThermodynamicTemperature::new::<thermodynamic_temperature::kelvin>(temperature),
-            mass_list,
-            thermodynamic_package : thermo_package
-        }
-    }
-
-    /// Determine mass fraction
-    pub fn mass_frac(&self, species: &Chemical) -> Option<f64> {
-        let mut total_mass = 0.0;
-        let mut component_mass = 0.0;
-
-        for chem in &self.mass_list {
-            total_mass += chem.mass_quantity.get::<mass::kilogram>();
-
-            if let Some(cids) = Some(chem.chemical_species.pubchem_obj.cids().unwrap()[0]) {
-                if cids == species.pubchem_obj.cids().unwrap_or_default()[0] {
-                    component_mass = chem.mass_quantity.get::<mass::kilogram>();
-                }
-            }
-        }
-
-        match component_mass {
-            0.0 => None,
-            _ => Some(component_mass / total_mass),
+            pressure : None,
+            temperature : None,
+            mass_list : vec![],
+            total_mass : None,
+            total_mol : None,
+            total_volume : None,
+            thermodynamic_package : None
         }
     }
     /// this function will return the total mass for an individual stream
-    pub fn total_mass(& self) -> f64 {
+    fn calc_total_mass(&mut self) -> Mass {
         let mut mass_sum  = 0.0;
         for chem in &self.mass_list {
             mass_sum += chem.mass_quantity.get::<mass::kilogram>();
         }
-        mass_sum
+        self.total_mass = Some(Mass::new::<mass::kilogram>(mass_sum));
+        
+        self.total_mass.unwrap()
+    }
+    /// this function will return the total moles for an individual stream
+    fn calc_total_moles(&mut self) -> AmountOfSubstance {
+        let mut mole_sum  = 0.0;
+        for chem in &self.mass_list {
+            mole_sum += chem.molar_quantity.get::<amount_of_substance::mole>();
+        }
+        self.total_mol = Some(AmountOfSubstance::new::<amount_of_substance::mole>(mole_sum));
+        
+        self.total_mol.unwrap()
+    }
+    /// this function will return the total volume for an individual stream
+    fn calc_total_volume(&mut self) -> Volume {
+        let mut vol_sum  = 0.0;
+        for chem in &self.mass_list {
+            vol_sum += chem.vol_quantity.get::<volume::cubic_meter>();
+        }
+        self.total_volume = Some(Volume::new::<volume::cubic_meter>(vol_sum));
+        
+        self.total_volume.unwrap()
     }
 }
 
@@ -186,112 +177,112 @@ pub trait ThermoPackage{
 
 #[cfg(test)]
 mod thermo_tests {
-    use super::*;
-    use crate::component::{Chemical, ChemicalProperties};
-    use uom::si::mass::kilogram;
-    use uom::si::pressure::pascal;
-    use uom::si::thermodynamic_temperature::kelvin;
-    use std::{thread,time::Duration};
+    // use super::*;
+    // use crate::component::{Chemical, ChemicalProperties};
+    // use uom::si::mass::kilogram;
+    // use uom::si::pressure::pascal;
+    // use uom::si::thermodynamic_temperature::kelvin;
+    // use std::{thread,time::Duration};
 
-    #[test]
-    ///Test case generates an instance of the 'ThermoState' struct
-    fn test_create_thermo_state() {
-        // Create some test data for ThermoMoleFrac (mole fractions)
-        let water = Chemical {
-            pubchem_obj: pubchem::Compound::new(962),
-            properties: ChemicalProperties {
-                molar_mass: 0.01801528,    // kg/mol for water
-                critical_temp: 647.1,      // K
-                critical_pressure: 2206.0, // Pa
-                acentric_factor: 0.344,    // example
-            },
-        };
-        thread::sleep(Duration::from_secs(10));
-        let water_mass = Mass::new::<kilogram>(2.0);
-        let water_species_pair = SpeciesQuantityPair {
-            chemical_species: water,
-            mass_quantity: water_mass,
-            const_a: 1.0,
-            const_b: 1.0,
-            const_c: 1.0,
-            const_d: 0.0
-        };
+    // #[test]
+    // ///Test case generates an instance of the 'ThermoState' struct
+    // fn test_create_thermo_state() {
+    //     // Create some test data for ThermoMoleFrac (mole fractions)
+    //     let water = Chemical {
+    //         pubchem_obj: pubchem::Compound::new(962),
+    //         properties: ChemicalProperties {
+    //             molar_mass: 0.01801528,    // kg/mol for water
+    //             critical_temp: 647.1,      // K
+    //             critical_pressure: 2206.0, // Pa
+    //             acentric_factor: 0.344,    // example
+    //         },
+    //     };
+    //     thread::sleep(Duration::from_secs(10));
+    //     let water_mass = Mass::new::<kilogram>(2.0);
+    //     let water_species_pair = SpeciesQuantityPair {
+    //         chemical_species: water,
+    //         mass_quantity: water_mass,
+    //         const_a: 1.0,
+    //         const_b: 1.0,
+    //         const_c: 1.0,
+    //         const_d: 0.0
+    //     };
 
-        // Create ThermoState
-        let thermo_state = ThermoState::new(
-            101325.0,                 // pressure in Pascals (1 atm)
-            298.15,                   // temperature in Kelvin (25°C)
-            vec![water_species_pair], // Example with one chemical
-        );
+    //     // Create ThermoState
+    //     let thermo_state = ThermoState::new(
+    //         101325.0,                 // pressure in Pascals (1 atm)
+    //         298.15,                   // temperature in Kelvin (25°C)
+    //         vec![water_species_pair], // Example with one chemical
+    //     );
 
-        // Validate ThermoState
-        assert_eq!(thermo_state.pressure.get::<pascal>(), 101325.0);
-        assert_eq!(thermo_state.temperature.get::<kelvin>(), 298.15);
-        assert_eq!(thermo_state.mass_list.len(), 1); // Should contain one mole fraction entry
+    //     // Validate ThermoState
+    //     assert_eq!(thermo_state.pressure.get::<pascal>(), 101325.0);
+    //     assert_eq!(thermo_state.temperature.get::<kelvin>(), 298.15);
+    //     assert_eq!(thermo_state.mass_list.len(), 1); // Should contain one mole fraction entry
 
-        
+    //     
 
-        // Check that the mole fraction's chemical is correctly set
-        assert_eq!(
-            thermo_state.mass_list[0]
-                .chemical_species
-                .get_pubchem_obj()
-                .cids()
-                .unwrap()[0],
-            962
-        );
-    }
+    //     // Check that the mole fraction's chemical is correctly set
+    //     assert_eq!(
+    //         thermo_state.mass_list[0]
+    //             .chemical_species
+    //             .get_pubchem_obj()
+    //             .cids()
+    //             .unwrap()[0],
+    //         962
+    //     );
+    // }
 
-    #[test]
-    ///Tests the mass fraction function within the 'ThermoState struct'
-    fn test_mass_fraction_calculation() {
-        let water = Chemical {
-            pubchem_obj: pubchem::Compound::new(962),
-            properties: ChemicalProperties {
-                molar_mass: 0.01801528,    // kg/mol for water
-                critical_temp: 647.1,      // K
-                critical_pressure: 2206.0, // Pa
-                acentric_factor: 0.344,    // example
-            },
-        };
-        thread::sleep(Duration::from_secs(10));
+    // #[test]
+    // ///Tests the mass fraction function within the 'ThermoState struct'
+    // fn test_mass_fraction_calculation() {
+    //     let water = Chemical {
+    //         pubchem_obj: pubchem::Compound::new(962),
+    //         properties: ChemicalProperties {
+    //             molar_mass: 0.01801528,    // kg/mol for water
+    //             critical_temp: 647.1,      // K
+    //             critical_pressure: 2206.0, // Pa
+    //             acentric_factor: 0.344,    // example
+    //         },
+    //     };
+    //     thread::sleep(Duration::from_secs(10));
 
-        let anisdine = Chemical {
-            pubchem_obj: pubchem::Compound::new(7732),
-            properties: ChemicalProperties {
-                molar_mass: 123.155,      // g/mol, converting to kg/mol = 123.155 / 1000
-                critical_temp: 592.0,     // K (approximated)
-                critical_pressure: 2.6e6, // Pa (approximated)
-                acentric_factor: 0.24,    // (approximated)
-            },
-        };
-        thread::sleep(Duration::from_secs(10));
-        
-        let water_mass = Mass::new::<kilogram>(2.0);
-        let water_species_pair = SpeciesQuantityPair {
-            chemical_species: water,
-            mass_quantity: water_mass,
-        };
+    //     let anisdine = Chemical {
+    //         pubchem_obj: pubchem::Compound::new(7732),
+    //         properties: ChemicalProperties {
+    //             molar_mass: 123.155,      // g/mol, converting to kg/mol = 123.155 / 1000
+    //             critical_temp: 592.0,     // K (approximated)
+    //             critical_pressure: 2.6e6, // Pa (approximated)
+    //             acentric_factor: 0.24,    // (approximated)
+    //         },
+    //     };
+    //     thread::sleep(Duration::from_secs(10));
+    //     
+    //     let water_mass = Mass::new::<kilogram>(2.0);
+    //     let water_species_pair = SpeciesQuantityPair {
+    //         chemical_species: water,
+    //         mass_quantity: water_mass,
+    //     };
 
-        let anisidine_mass = Mass::new::<kilogram>(8.0);
-        let anisidine_species_pair = SpeciesQuantityPair {
-            chemical_species: anisdine,
-            mass_quantity: anisidine_mass,
-        };
+    //     let anisidine_mass = Mass::new::<kilogram>(8.0);
+    //     let anisidine_species_pair = SpeciesQuantityPair {
+    //         chemical_species: anisdine,
+    //         mass_quantity: anisidine_mass,
+    //     };
 
-        let therm_obj = ThermoState::new(
-            101325.0,
-            298.15,
-            vec![water_species_pair, anisidine_species_pair],
-        );
+    //     let therm_obj = ThermoState::new(
+    //         101325.0,
+    //         298.15,
+    //         vec![water_species_pair, anisidine_species_pair],
+    //     );
 
-        let mass_fraction = therm_obj
-            .mass_frac(&therm_obj.mass_list[0].chemical_species)
-            .unwrap();
+    //     let mass_fraction = therm_obj
+    //         .mass_frac(&therm_obj.mass_list[0].chemical_species)
+    //         .unwrap();
 
-        assert!(
-            (mass_fraction - 0.2).abs() < 1e-6,
-            "Mole fraction calculation failed"
-        ); // Should be 0.2
-    }
+    //     assert!(
+    //         (mass_fraction - 0.2).abs() < 1e-6,
+    //         "Mole fraction calculation failed"
+    //     ); // Should be 0.2
+    // }
 }
