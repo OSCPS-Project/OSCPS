@@ -69,7 +69,7 @@ impl ThermoPackage for IdealGasPackage {
                 cp_ref = chem.const_a * t_ref + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * t_ref.powi(2) + (-1.0) * (chem.const_d / (10.0f64.powf(-5.0))) * t_ref.powi(-1);
                 cp_t = chem.const_a * self.temperature.get::<thermodynamic_temperature::kelvin>() + (1.0 / 2.0) * (chem.const_b / (10.0f64.powf(3.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>().powf(2.0) + (-1.0) * (chem.const_d / (10.0f64.powf(-5.0))) * self.temperature.get::<thermodynamic_temperature::kelvin>().powf(-1.0);
             }
-            let species_enthalpy = h_ref + (cp_t - cp_ref)* r.get::<molar_heat_capacity::joule_per_kelvin_mole>();
+            let species_enthalpy = (chem_object.molar_quantity.get::<amount_of_substance::mole>()/self.total_mol.get::<amount_of_substance::mole>())*(h_ref + (cp_t - cp_ref)* r.get::<molar_heat_capacity::joule_per_kelvin_mole>());
             total_enthalpy +=  species_enthalpy;
         }
 
@@ -107,7 +107,7 @@ impl ThermoPackage for IdealGasPackage {
             let integral_solve_species = cp_t - cp_ref;
             let pressure_ratio = (*chem_object).partial_pressure.get::<pressure::atmosphere>() / p_o;
 
-            entropy_total += r.get::<molar_heat_capacity::joule_per_kelvin_mole>()*(integral_solve_species - pressure_ratio);
+            entropy_total += (chem_object.molar_quantity.get::<amount_of_substance::mole>()/self.total_mol.get::<amount_of_substance::mole>())*r.get::<molar_heat_capacity::joule_per_kelvin_mole>()*(integral_solve_species - pressure_ratio);
         }
 
         Energy::new::<energy::joule>(entropy_total)

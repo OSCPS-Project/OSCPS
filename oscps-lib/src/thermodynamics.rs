@@ -150,7 +150,6 @@ impl ThermoState {
 ///Will include functions common to thermodynamic packages
 ///Will also enable to user to switch between thermodynamic packages within the ThermoState struct
 ///(the thermodynamic packages will be structs)
-
 pub trait ThermoPackage{
     ///Calculating the Enthalpy
     fn enthalpy(&self) -> Energy;
