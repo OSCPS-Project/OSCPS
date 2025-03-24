@@ -156,14 +156,10 @@ pub trait ThermoPackage{
     fn enthalpy(&self) -> Energy;
     ///Calculating the Entropy
     fn entropy(&self) -> Energy;
-    /// Calculate amount of moles
-    fn calculate_moles(&self) -> AmountOfSubstance;
     ///Calculate pressure
     fn pressure(&self) -> Pressure;
     ///Calculate temperature
     fn temperature(&self) -> ThermodynamicTemperature;
-    ///Calculate volume
-    fn volume(&self) -> Volume;
     ///Calculate heat capacity
     fn heat_capacity(&self) -> HeatCapacity;
     ///Calculate internal temperature
