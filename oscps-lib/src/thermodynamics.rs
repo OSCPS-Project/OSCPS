@@ -61,7 +61,7 @@ impl ThermodynamicConstants {
 /// Species list
 pub struct ComponentData {
     /// Chemical species
-    pub chemical_species: Chemical,
+    pub chemical_species: Chemical, // will contain intrinsic properties of species
     /// Mass quantity
     pub mass_quantity: Mass,
     /// Molar quantity
@@ -131,16 +131,6 @@ impl ThermoState {
         
         self.total_mol.unwrap()
     }
-    /// this function will return the total volume for an individual stream
-    fn calc_total_volume(&mut self) -> Volume {
-        let mut vol_sum  = 0.0;
-        for chem in &self.mass_list {
-            vol_sum += chem.vol_quantity.get::<volume::cubic_meter>();
-        }
-        self.total_volume = Some(Volume::new::<volume::cubic_meter>(vol_sum));
-        
-        self.total_volume.unwrap()
-    }
 }
 
 ///Thermodynamic Packages.
@@ -157,6 +147,8 @@ pub trait ThermoPackage{
     fn entropy(&self) -> Energy;
     ///Calculate pressure
     fn pressure(&self) -> Pressure;
+    ///Calculate volume
+    fn volume(&self) -> Volume;
     ///Calculate temperature
     fn temperature(&self) -> ThermodynamicTemperature;
     ///Calculate heat capacity
