@@ -10,6 +10,7 @@
 pub mod ideal_gas_package;
 use crate::component::Chemical;
 
+use uom::si::f32::Ratio;
 use uom::si::f64::*;
 use uom::si::mass;
 use uom::si::molar_heat_capacity;
@@ -152,7 +153,7 @@ pub trait ThermoPackage{
     ///Calculate temperature
     fn temperature(&self) -> ThermodynamicTemperature;
     ///Calculate vapor fractions
-    fn vapor_fraction(&self) -> Dimensionless;
+    fn vapor_fraction(&self) -> Ratio;
     ///Calculate heat capacity
     fn heat_capacity(&self) -> HeatCapacity;
     ///Calculate internal temperature
