@@ -151,6 +151,8 @@ pub trait ThermoPackage{
     fn volume(&self) -> Volume;
     ///Calculate temperature
     fn temperature(&self) -> ThermodynamicTemperature;
+    ///Calculate vapor fractions
+    fn vapor_fraction(&self) -> Dimensionless;
     ///Calculate heat capacity
     fn heat_capacity(&self) -> HeatCapacity;
     ///Calculate internal temperature

@@ -112,5 +112,11 @@ impl ThermoPackage for IdealGasPackage {
 
         Energy::new::<energy::joule>(entropy_total)
     }
+    /// Determining vapor fraction
+        // In Ideal gas package, only will be used when components are all in gaseous state so
+        // vapor fraction will always be equal to 1
+    fn vapor_fraction(&self) -> Ratio {
+        Ratio::new(1)
+    }
 }
 
