@@ -13,6 +13,7 @@ use crate::component::Chemical;
 use uom::si::f32::MolarEnergy;
 use uom::si::f32::MolarHeatCapacity;
 use uom::si::f32::Ratio;
+use uom::si::f64::MolarEnergy;
 use uom::si::f64::*;
 use uom::si::mass;
 use uom::si::molar_heat_capacity;
@@ -159,7 +160,7 @@ pub trait ThermoPackage{
     ///Calculate heat capacity
     fn heat_capacity_const_pressure(&self) -> HeatCapacity;
     ///Calculate internal temperature
-    fn internal_energy(&self) -> Energy;
+    fn internal_energy(&self) -> MolarEnergy;
     ///Calculate gibbs free energy
     fn gibbs_free_energy(&self) -> Energy;
 }

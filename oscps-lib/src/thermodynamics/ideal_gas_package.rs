@@ -3,6 +3,7 @@
 ///Will contain equations related to ideal gases
 use crate::thermodynamics::*;
 use std::sync::Arc;
+use uom::si::f32::MolarEnergy;
 use uom::si::f64::*;
 use uom::si::mass;
 use uom::si::molar_energy;
@@ -77,14 +78,12 @@ impl ThermoPackage for IdealGasPackage {
 
         MolarEnergy::new::<molar_energy::joule_per_mole>(total_enthalpy)
     }
-
     /// Determine ideal gas pressure
     fn pressure(&self) -> Pressure {
         let r = ThermodynamicConstants::UniversalGasConstant.value().downcast::<MolarHeatCapacity>().unwrap();
         let ideal_pressure = (self.total_mol.get::<amount_of_substance::mole>() * r.get::<molar_heat_capacity::joule_per_kelvin_mole>() * self.temperature.get::<thermodynamic_temperature::kelvin>()) / (self.total_vol.get::<volume::cubic_meter>());
         Pressure::new::<pressure::pascal>(ideal_pressure)
     }
-
     ///Deterrmine entropy
         // Will need to use equation (5.10) from the 'Introduction to Chemical Engineering
         // Thermodynamics' 
@@ -136,6 +135,23 @@ impl ThermoPackage for IdealGasPackage {
             total_heat_capacity_const_pressure += cp_t* (chem_object.molar_quantity.get::<amount_of_substance::mole>()/self.total_mol.get::<amount_of_substance::mole>())*r.get::<molar_heat_capacity::joule_per_kelvin_mole>();
         }
         HeatCapacity::new::<molar_heat_capacity::joule_per_kelvin_mole>(total_heat_capacity_const_pressure)
+    }
+    ///Determining internal energy
+        //Need to figure out way to calculate Cv
+    fn internal_energy(&self) -> MolarEnergy {
+        MolarEnergy::new::<molar_energy::joule_per_mole>(0)
+    }
+    ///Determining temperature
+    fn temperature(&self) -> ThermodynamicTemperature {
+        
+    }
+    ///Determining volume
+    fn volume(&self) -> Volume {
+        
+    }
+    ///Determining the Gibbs free energy
+    fn gibbs_free_energy(&self) -> Energy {
+        
     }
 }
 
