@@ -3,10 +3,17 @@
 ///Will contain equations related to ideal gases
 use crate::thermodynamics::*;
 use std::sync::Arc;
+use uom::si::f32::HeatCapacity;
+use uom::si::f32::MolarEnergy;
+use uom::si::f32::MolarHeatCapacity;
+use uom::si::f64::MolarEnergy;
+use uom::si::f64::MolarHeatCapacity;
 use uom::si::f64::*;
 use uom::si::mass;
+use uom::si::molar_energy;
 use uom::si::molar_heat_capacity;
 use uom::si::pressure;
+use uom::si::specific_heat_capacity;
 use uom::si::thermodynamic_temperature;
 use uom::si::energy;
 use uom::si::amount_of_substance;
@@ -51,7 +58,7 @@ impl ThermoPackage for IdealGasPackage {
             // when working with gases, assume that they are ideal gases
             // Tref = 298 K & Pref = 101.325 kPa
             // Href = 0 
-    fn enthalpy(&self) -> Energy {
+    fn enthalpy(&self) -> MolarEnergy {
         let mut total_enthalpy = 0.0;
         let t_ref = 298.15; //reference temperature 
         let h_ref = 0.0; //Reference enthalpy
@@ -73,7 +80,7 @@ impl ThermoPackage for IdealGasPackage {
             total_enthalpy +=  species_enthalpy;
         }
 
-        Energy::new::<energy::joule>(total_enthalpy)
+        MolarEnergy::new::<molar_energy::joule_per_mole>(total_enthalpy)
     }
 
     /// Determine ideal gas pressure
@@ -86,7 +93,7 @@ impl ThermoPackage for IdealGasPackage {
     ///Deterrmine entropy
         // Will need to use equation (5.10) from the 'Introduction to Chemical Engineering
         // Thermodynamics' 
-    fn entropy(&self) -> Energy {
+    fn entropy(&self) -> MolarHeatCapacity {
         let mut entropy_total = 0.0;
         let t_ref = 298.15_f64; //reference temperature 
         let mut cp_ref;
@@ -110,13 +117,31 @@ impl ThermoPackage for IdealGasPackage {
             entropy_total += (chem_object.molar_quantity.get::<amount_of_substance::mole>()/self.total_mol.get::<amount_of_substance::mole>())*r.get::<molar_heat_capacity::joule_per_kelvin_mole>()*(integral_solve_species - pressure_ratio);
         }
 
-        Energy::new::<energy::joule>(entropy_total)
+        MolarHeatCapacity::new::<molar_heat_capacity::joule_per_kelvin_mole>(entropy_total)
     }
     /// Determining vapor fraction
         // In Ideal gas package, only will be used when components are all in gaseous state so
         // vapor fraction will always be equal to 1
     fn vapor_fraction(&self) -> Ratio {
         Ratio::new(1)
+    }
+
+    /// Determining Cp (Heat capacity under constant pressure conditions)
+    fn heat_capacity_const_pressure(&self) -> HeatCapacity {
+        let mut total_heat_capacity_const_pressure : f64 = 0;
+        let mut cp_t;
+        let t = self.temperature.get::<thermodynamic_temperature::kelvin>();
+        for chem_object in &self.species_list {
+            let chem = &(*chem_object).chemical_species.properties;
+            if chem.const_c != 0.0 {
+                cp_t = chem.const_a + (chem.const_b / (10.0f64.powf(3.0)))*t + (chem.const_c / (10.0f64.powf(6.0)))*t.powf(2.0);            
+            }
+            else {
+                cp_t = chem.const_a + (chem.const_b / (10.0f64.powf(3.0)))*t + (chem.const_d / (10.0f64.powf(-5.0)))*t.powf(-2.0);
+            }
+            total_heat_capacity_const_pressure += cp_t* (chem_object.molar_quantity.get::<amount_of_substance::mole>()/self.total_mol.get::<amount_of_substance::mole>())*r.get::<molar_heat_capacity::joule_per_kelvin_mole>();
+        }
+        HeatCapacity::new::<molar_heat_capacity::joule_per_kelvin_mole>(total_heat_capacity_const_pressure)
     }
 }
 

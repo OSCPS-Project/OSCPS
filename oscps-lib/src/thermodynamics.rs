@@ -10,6 +10,8 @@
 pub mod ideal_gas_package;
 use crate::component::Chemical;
 
+use uom::si::f32::MolarEnergy;
+use uom::si::f32::MolarHeatCapacity;
 use uom::si::f32::Ratio;
 use uom::si::f64::*;
 use uom::si::mass;
@@ -143,9 +145,9 @@ impl ThermoState {
 ///(the thermodynamic packages will be structs)
 pub trait ThermoPackage{
     ///Calculating the Enthalpy
-    fn enthalpy(&self) -> Energy;
+    fn enthalpy(&self) -> MolarEnergy;
     ///Calculating the Entropy
-    fn entropy(&self) -> Energy;
+    fn entropy(&self) -> MolarHeatCapacity;
     ///Calculate pressure
     fn pressure(&self) -> Pressure;
     ///Calculate volume
@@ -155,7 +157,7 @@ pub trait ThermoPackage{
     ///Calculate vapor fractions
     fn vapor_fraction(&self) -> Ratio;
     ///Calculate heat capacity
-    fn heat_capacity(&self) -> HeatCapacity;
+    fn heat_capacity_const_pressure(&self) -> HeatCapacity;
     ///Calculate internal temperature
     fn internal_energy(&self) -> Energy;
     ///Calculate gibbs free energy
