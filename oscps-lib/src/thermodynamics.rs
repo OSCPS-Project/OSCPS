@@ -10,18 +10,12 @@
 pub mod ideal_gas_package;
 use crate::component::Chemical;
 
-use uom::si::f32::MolarEnergy;
-use uom::si::f32::MolarHeatCapacity;
-use uom::si::f32::Ratio;
-use uom::si::f64::MolarEnergy;
 use uom::si::f64::*;
 use uom::si::mass;
-use uom::si::molar_heat_capacity;
 use uom::si::pressure;
 use uom::si::thermodynamic_temperature;
 use uom::si::energy;
 use uom::si::amount_of_substance;
-use uom::si::volume;
 
 
 #[allow(dead_code)]
@@ -158,7 +152,7 @@ pub trait ThermoPackage{
     ///Calculate vapor fractions
     fn vapor_fraction(&self) -> Ratio;
     ///Calculate heat capacity
-    fn heat_capacity_const_pressure(&self) -> HeatCapacity;
+    fn heat_capacity_const_pressure(&self) -> MolarHeatCapacity;
     ///Calculate internal temperature
     fn internal_energy(&self) -> MolarEnergy;
     ///Calculate gibbs free energy
