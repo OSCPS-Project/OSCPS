@@ -120,7 +120,6 @@ impl ThermoPackage for IdealGasPackage {
     fn vapor_fraction(&self) -> Ratio {
         Ratio::new(1)
     }
-
     /// Determining Cp (Heat capacity under constant pressure conditions)
     fn heat_capacity_const_pressure(&self) -> HeatCapacity {
         let mut total_heat_capacity_const_pressure : f64 = 0;
