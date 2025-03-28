@@ -3,11 +3,6 @@
 ///Will contain equations related to ideal gases
 use crate::thermodynamics::*;
 use std::sync::Arc;
-use uom::si::f32::HeatCapacity;
-use uom::si::f32::MolarEnergy;
-use uom::si::f32::MolarHeatCapacity;
-use uom::si::f64::MolarEnergy;
-use uom::si::f64::MolarHeatCapacity;
 use uom::si::f64::*;
 use uom::si::mass;
 use uom::si::molar_energy;
