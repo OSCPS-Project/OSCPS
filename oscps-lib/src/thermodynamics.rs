@@ -7,6 +7,7 @@
 //! documentation is in place, but more descriptive documentation should be 
 //! implemented in the future.
 
+///Importing Ideal Gas Package
 pub mod ideal_gas_package;
 use crate::component::Chemical;
 
@@ -82,11 +83,11 @@ pub struct ThermoState {
     pub temperature: Option<ThermodynamicTemperature>, // temperature
     /// List of mole fractions.
     pub mass_list: Vec<ComponentData>,//Information about each component within stream
-    // Total Mass
+    /// Total Mass
     pub total_mass : Option<Mass>, // total mass in stream
-    // Total Moles
+    /// Total Moles
     pub total_mol : Option<AmountOfSubstance>, // total moles in stream
-    // Total Volume
+    /// Total Volume
     pub total_volume : Option<Volume>, // total volume in stream
     ///Thermo Package
     pub thermodynamic_package : Option<Box<dyn ThermoPackage>> // thermodynamics package 

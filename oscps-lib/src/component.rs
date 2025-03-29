@@ -110,6 +110,10 @@ impl ChemicalProperties {
             critical_temp: 0.0,     // K
             critical_pressure: 0.0, // Pa
             acentric_factor: 0.0,
+            const_a: 0.0,
+            const_b: 0.0,
+            const_c: 0.0,
+            const_d: 0.0
         })
     }
 }

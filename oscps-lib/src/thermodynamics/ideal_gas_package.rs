@@ -1,6 +1,8 @@
 ///#IdealGasPackage
 ///
 ///Will contain equations related to ideal gases
+
+
 use crate::thermodynamics::*;
 use std::sync::Arc;
 use uom::si::f64::*;
@@ -13,13 +15,19 @@ use uom::si::amount_of_substance;
 use uom::si::volume;
 use uom::si::ratio;
 
-
+///Creating the ideal gas thermodynamics package
 pub struct IdealGasPackage {
+    ///Temperature
     pub temperature : Arc<ThermodynamicTemperature>,
+    /// Pressure
     pub pressure : Arc<Pressure>,
+    ///List of Species
     pub species_list : Vec<Arc<ComponentData>>,
+    /// Mass
     pub total_mass : Arc<Mass>,
+    /// Volume
     pub total_vol : Arc<Volume>,
+    /// Moles
     pub total_mol : Arc<AmountOfSubstance>
 }
 ///Implementing functions specific to the IdealGasPackage
