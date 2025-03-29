@@ -11,7 +11,3 @@ pub mod connector;
 pub mod simulation;
 pub mod thermodynamics;
 
-/// An example function. This will be removed in the final release.
-pub fn hello() -> String {
-    "Hello, world!".to_string()
-}
