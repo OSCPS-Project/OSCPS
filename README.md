@@ -1,4 +1,4 @@
-# OSCPS (Open Sourced Chemical Engineering Process Simulator)
+# OSCPS (Open Source Chemical Process Simulator)
 
 ![Rust Tests](https://github.com/OSCPS-Project/OSCPS/actions/workflows/rust-tests.yml/badge.svg?branch=develop)
 ![Documentation](https://github.com/OSCPS-Project/OSCPS/actions/workflows/check-docs.yml/badge.svg?branch=develop)
