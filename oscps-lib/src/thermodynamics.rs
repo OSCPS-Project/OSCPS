@@ -9,6 +9,8 @@
 
 ///Importing Ideal Gas Package
 pub mod ideal_gas_package;
+///Importing SRK Package
+pub mod srk_package;
 use crate::component::Chemical;
 
 use uom::si::f64::*;
