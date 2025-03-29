@@ -2,10 +2,6 @@
 //!
 //! This module will hold all the functions related to calculating 
 //! themrodynamic properties for the blocks and chemical species.
-//!
-//! TODO: All public items, including struct members, must be documented. Placeholder
-//! documentation is in place, but more descriptive documentation should be 
-//! implemented in the future.
 
 ///Importing Ideal Gas Package
 pub mod ideal_gas_package;
