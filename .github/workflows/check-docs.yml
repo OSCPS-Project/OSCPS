@@ -5,10 +5,8 @@ on:
     branches:
       - main
       - develop
-  push:
-    branches:
-      - main
-      - develop
+  release:
+    types: [published]
 
 jobs:
   lint:
