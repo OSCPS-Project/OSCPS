@@ -6,7 +6,7 @@
 #![warn(missing_docs)]
 
 pub mod blocks;
-pub mod component;
+pub mod properties;
 pub mod connector;
 pub mod simulation;
 pub mod thermodynamics;
