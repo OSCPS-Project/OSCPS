@@ -7,8 +7,11 @@
 pub mod ideal_gas_package;
 ///Importing SRK Package
 pub mod srk_package;
-use crate::component::Chemical;
 
+/// Importing chemical properties
+use crate::properties::Chemical;
+
+///Importing External Packages
 use uom::si::f64::*;
 use uom::si::mass;
 use uom::si::pressure;
