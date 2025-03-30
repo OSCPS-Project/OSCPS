@@ -4,6 +4,7 @@
 
 extern crate uom;
 extern crate pubchem;
+///Importing pure species properties
 pub mod pure_species_properties;
 
 use anyhow::Result;
@@ -12,10 +13,15 @@ use std::{thread,time::Duration};
 use serde::{Serialize, Deserialize};
 
 #[allow(dead_code)]
-/// This will hold the list of chemicals used within the simulation
-pub struct ChemicalList {
-    chemical_list: Vec<pubchem::Compound>,
+/// Used by the "Chemical" struct to create the pubchem::Compound obj based on
+/// either the chemical name or the pubchem id of the chemical
+pub enum ChemicalIdentifier {
+    /// The PubChem ID of the component.
+    PubchemID(u32),
+    /// The actual name of the component.
+    CompoundName(String),
 }
+
 
 #[allow(dead_code)]
 /// A struct to store information regarding the chemical properties of a 
@@ -26,16 +32,6 @@ pub struct Chemical {
     pub pubchem_obj: pubchem::Compound,
     /// Physical properties of a compound.
     pub properties: ChemicalProperties,
-}
-
-#[allow(dead_code)]
-/// Used by the "Chemical" struct to create the pubchem::Compound obj based on
-/// either the chemical name or the pubchem id of the chemical
-pub enum ChemicalIdentifier {
-    /// The PubChem ID of the component.
-    PubchemID(u32),
-    /// The actual name of the component.
-    CompoundName(String),
 }
 
 #[allow(dead_code)]
