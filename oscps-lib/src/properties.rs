@@ -80,10 +80,7 @@ impl Chemical {
 #[allow(dead_code)]
 /// Struct containing properties of a chemical
 pub struct ChemicalProperties {
-    /// Molecular weight (kg/mol)
-    pub molar_mass: MolarMass,
-    
-    /// Critical properties (optional since not all compounds have them)
+    /// Pure species properties
     pub critical: Option<CriticalProperties>,
     
     /// Heat capacity coefficients (optional, stored as an array)
@@ -93,6 +90,7 @@ pub struct ChemicalProperties {
     pub transport: Option<TransportProperties>,
     
     /// Additional chemical property categories
+        // Here we might add properties related to binary interactions, etc...
     pub other_properties: Option<Vec<OtherProperty>>,
 }
 

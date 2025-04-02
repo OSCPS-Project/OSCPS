@@ -6,3 +6,10 @@
 
 
 use crate::properties::*;
+
+///#PureSpeciesProperties
+///
+///This will contain all the important properties for pure species
+pub struct PureSpeciesProperties {
+
+}
