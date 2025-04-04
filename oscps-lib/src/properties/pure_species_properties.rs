@@ -4,7 +4,7 @@
 /// temperature, critical pressure, critical compressibility, critical molar volume, and normal
 /// boiling point.
 
-
+#[warn(unused_imports)]
 use crate::properties::*;
 use uom::si::f64;
 use std::sync::Arc;
