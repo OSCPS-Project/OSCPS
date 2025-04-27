@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
 
-members = [
+members = [ "oscps-gui",
     "oscps-lib",
     ]

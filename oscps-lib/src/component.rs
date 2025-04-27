@@ -90,6 +90,14 @@ pub struct ChemicalProperties {
     pub critical_pressure: f64, // Pa
     /// Acentric factor of a compound.
     pub acentric_factor: f64,
+    ///Heat capacity Coefficient A
+    pub const_a: f64,
+    ///Heat capacity Coefficient B
+    pub const_b: f64,
+    ///Heat capacity Coefficient C
+    pub const_c: f64,
+    ///Heat capacity Coefficient D
+    pub const_d: f64
 }
 
 /// Implementation of the ChemicalProperties struct.
@@ -102,6 +110,10 @@ impl ChemicalProperties {
             critical_temp: 0.0,     // K
             critical_pressure: 0.0, // Pa
             acentric_factor: 0.0,
+            const_a: 0.0,
+            const_b: 0.0,
+            const_c: 0.0,
+            const_d: 0.0
         })
     }
 }

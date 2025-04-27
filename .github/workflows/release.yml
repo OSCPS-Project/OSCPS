@@ -1,0 +1,35 @@
+name: OSCPS_Release_Workflow
+
+on:
+  workflow_dispatch:  # Enables manual triggering from GitHub Actions UI
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Compress binary
+        run: |
+          mkdir -p release
+          cp target/release/your-binary-name release/
+          cd release
+          tar -czvf your-binary-name-linux.tar.gz your-binary-name
+        shell: bash
+
+      - name: Create GitHub Release and Upload Binary
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/your-binary-name-linux.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

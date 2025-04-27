@@ -1,7 +1,10 @@
 [package]
 name = "oscps-gui"
 version = "0.1.0"
+authors = ["Nathaniel Thomas <nathaniel@swbell.net>", "Bhargav Akula <bhargavakula01>"]
 edition = "2021"
 
 [dependencies]
-iced = "0.13.1"
+env_logger = "0.11.6"
+iced = {version = "0.13.1", features = ["canvas", "debug", "lazy"]}
+log = "0.4"
