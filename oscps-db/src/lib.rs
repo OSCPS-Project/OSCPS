@@ -9,3 +9,5 @@
 
 
 pub mod postgres_db;
+pub mod properties_db;
+
