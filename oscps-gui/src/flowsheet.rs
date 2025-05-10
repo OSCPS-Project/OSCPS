@@ -2,8 +2,9 @@ use iced::mouse;
 use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::{self, Canvas, Frame, Geometry, Path, Stroke};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Theme};
+use oscps_lib::simulation::Simulation;
 
-use log::{info, debug};
+use log::{debug, info};
 
 #[derive(Default)]
 pub struct State {
@@ -58,6 +59,8 @@ impl<'a> canvas::Program<Curve> for Flowsheet<'a> {
         let Some(cursor_position) = cursor.position_in(bounds) else {
             return (event::Status::Ignored, None);
         };
+        // TODO: Do not allow a user to connect the input of a stream to the
+        // output of a block and vice-versa.
         match event {
             Event::Mouse(mouse_event) => {
                 let message = match mouse_event {
@@ -72,10 +75,12 @@ impl<'a> canvas::Program<Curve> for Flowsheet<'a> {
                                             from: cursor_position,
                                         });
                                         for curve in self.curves {
-                                            if !matches!(curve, Curve::Connector{..}) && curve.on_output_connector(cursor_position) {
+                                            if !matches!(curve, Curve::Connector { .. })
+                                                && curve.on_output_connector(cursor_position)
+                                            {
                                                 info!("Connected to input!");
                                                 result = Some(Pending::One {
-                                                    from: curve.get_output_point()
+                                                    from: curve.get_output_point(),
                                                 });
                                                 break;
                                             }
@@ -87,60 +92,60 @@ impl<'a> canvas::Program<Curve> for Flowsheet<'a> {
                                         info!("Created connector.");
                                         *state = None;
                                         let mut result = Some(Curve::Connector {
-                                                    from,
-                                                    to: cursor_position
-                                                });
+                                            from,
+                                            to: cursor_position,
+                                        });
                                         for curve in self.curves {
-                                            if !matches!(curve, Curve::Connector{..}) && curve.on_input_connector(cursor_position) {
+                                            if !matches!(curve, Curve::Connector { .. })
+                                                && curve.on_input_connector(cursor_position)
+                                            {
                                                 info!("Connected to input!");
                                                 result = Some(Curve::Connector {
                                                     from,
-                                                    to: curve.get_input_point()
+                                                    to: curve.get_input_point(),
                                                 });
                                                 break;
                                             }
                                         }
                                         result
-                                    }
-                                    // Some(Pending::Two { from, to }) => {
-                                    //     *state = None;
-                                    //     Some(Curve::Connector {
-                                    //         from,
-                                    //         to,
-                                    //     })
-                                    // }
+                                    } // Some(Pending::Two { from, to }) => {
+                                      //     *state = None;
+                                      //     Some(Curve::Connector {
+                                      //         from,
+                                      //         to,
+                                      //     })
+                                      // }
                                 }
-                            },
-                            BlockPlacement::Mixer => {        
-                                let input_point = Point::new(cursor_position.x - 5.0, cursor_position.y + 50.0);
-                                let output_point = Point::new(cursor_position.x + 105.0, cursor_position.y + 50.0);
+                            }
+                            BlockPlacement::Mixer => {
+                                let input_point =
+                                    Point::new(cursor_position.x - 5.0, cursor_position.y + 50.0);
+                                let output_point =
+                                    Point::new(cursor_position.x + 105.0, cursor_position.y + 50.0);
                                 info!("Creating mixer at ({}, {}) with input at ({}, {}) and output at ({}, {})", cursor_position.x, cursor_position.y, input_point.x, input_point.y, output_point.x, output_point.y);
                                 Some(Curve::Mixer {
                                     at: cursor_position,
                                     input_point,
                                     output_point,
                                 })
-                            },
+                            }
                             BlockPlacement::Default => {
                                 // TODO: Add code for selecting stuff
                                 None
                             }
                         }
-
-                    },
+                    }
                     // Right click should cancel placement.
                     mouse::Event::ButtonPressed(mouse::Button::Right) => {
                         info!("Right mouse button clicked");
-                        *state = None; 
+                        *state = None;
                         None
                     }
                     _ => None,
                 };
                 (event::Status::Captured, message)
-            },
-            Event::Keyboard(_) => {
-                (event::Status::Captured, None) 
             }
+            Event::Keyboard(_) => (event::Status::Captured, None),
             _ => (event::Status::Ignored, None),
         }
     }
@@ -153,16 +158,15 @@ impl<'a> canvas::Program<Curve> for Flowsheet<'a> {
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> Vec<Geometry> {
-        let content =
-            self.state.cache.draw(renderer, bounds.size(), |frame| {
-                Curve::draw_all(self.curves, frame, theme);
-                frame.stroke(
-                    &Path::rectangle(Point::ORIGIN, frame.size()),
-                    Stroke::default()
+        let content = self.state.cache.draw(renderer, bounds.size(), |frame| {
+            Curve::draw_all(self.curves, frame, theme);
+            frame.stroke(
+                &Path::rectangle(Point::ORIGIN, frame.size()),
+                Stroke::default()
                     .with_width(20.0)
                     .with_color(theme.palette().text),
-                );
-            });
+            );
+        });
         if let Some(pending) = state {
             vec![content, pending.draw(renderer, theme, bounds, cursor)]
         } else {
@@ -193,22 +197,22 @@ pub enum Curve {
         at: Point,
         input_point: Point,
         output_point: Point,
-    }
+    },
 }
 
 impl Curve {
-    fn on_input_connector(
-        &self, 
-        cursor_position: Point
-        ) -> bool { 
+    fn on_input_connector(&self, cursor_position: Point) -> bool {
         // TODO: Fix arbitrary 5-pixel bounding box. Ideally use a circular bound.
         let input = self.get_input_point();
-        info!("Checking input bounds with cursor at ({}, {})", cursor_position.x, cursor_position.y);
+        info!(
+            "Checking input bounds with cursor at ({}, {})",
+            cursor_position.x, cursor_position.y
+        );
         if cursor_position.x > input.x - 5.0 && cursor_position.x < input.x + 5.0 {
             debug!("Bound x match!");
             if cursor_position.y > input.y - 5.0 && cursor_position.y < input.y + 5.0 {
                 info!("Bounds match!");
-                return true 
+                return true;
             }
         }
         false
@@ -216,26 +220,22 @@ impl Curve {
 
     fn get_input_point(&self) -> Point {
         return match self {
-            Curve::Connector{from, ..} => {
-                *from
-            },
-            Curve::Mixer{input_point, ..} => {
-                *input_point
-            },
-        }
+            Curve::Connector { from, .. } => *from,
+            Curve::Mixer { input_point, .. } => *input_point,
+        };
     }
 
-    fn on_output_connector(
-        &self, 
-        cursor_position: Point
-        ) -> bool { 
+    fn on_output_connector(&self, cursor_position: Point) -> bool {
         let output = self.get_output_point();
-        info!("Checking output bounds with cursor at ({}, {})", cursor_position.x, cursor_position.y);
+        info!(
+            "Checking output bounds with cursor at ({}, {})",
+            cursor_position.x, cursor_position.y
+        );
         if cursor_position.x > output.x - 5.0 && cursor_position.x < output.x + 5.0 {
             debug!("Bound x match!");
             if cursor_position.y > output.y - 5.0 && cursor_position.y < output.y + 5.0 {
                 info!("Bounds match!");
-                return true 
+                return true;
             }
         }
         false
@@ -243,45 +243,45 @@ impl Curve {
 
     fn get_output_point(&self) -> Point {
         return match self {
-            Curve::Connector{to, ..} => {
-                *to
-            },
-            Curve::Mixer{output_point, ..} => {
-                *output_point
-            },
-        }
+            Curve::Connector { to, .. } => *to,
+            Curve::Mixer { output_point, .. } => *output_point,
+        };
     }
     fn draw_all(curves: &[Curve], frame: &mut Frame, theme: &Theme) {
         let curves = Path::new(|p| {
             for curve in curves {
                 match curve {
-                    Curve::Connector{ from, to } => {
+                    Curve::Connector { from, to } => {
                         debug!("Drawing connector");
                         p.move_to(*from);
                         // p.quadratic_curve_to(*control, *to);
-                        let half_x_coord = from.x + (to.x - from.x)/2.0; 
+                        let half_x_coord = from.x + (to.x - from.x) / 2.0;
                         p.line_to(Point::new(half_x_coord, from.y));
                         p.line_to(Point::new(half_x_coord, to.y));
                         p.line_to(Point::new(to.x, to.y));
                         let mut arrow_offset_x = -10.0;
-                        let arrow_offset_y = 5.0; 
+                        let arrow_offset_y = 5.0;
                         if to.x < from.x {
-                            arrow_offset_x *= -1.0; 
-                        }                        
+                            arrow_offset_x *= -1.0;
+                        }
                         p.line_to(Point::new(to.x + arrow_offset_x, to.y + arrow_offset_y));
                         p.line_to(Point::new(to.x + arrow_offset_x, to.y - arrow_offset_y));
                         p.line_to(Point::new(to.x, to.y));
                     }
-                    Curve::Mixer{at, input_point, output_point} => {
+                    Curve::Mixer {
+                        at,
+                        input_point,
+                        output_point,
+                    } => {
                         debug!("Drawing mixer.");
-                        p.move_to(*at); 
+                        p.move_to(*at);
                         // p.rectangle(*at, Size::new(200.0, 200.0));
                         let bottom_point = Point::new(at.x, at.y + 100.0);
                         let middle_point = Point::new(at.x + 100.0, at.y + 50.0);
                         p.line_to(bottom_point);
                         p.line_to(middle_point);
                         p.line_to(*at);
-                        // Draw a circle for input connectors 
+                        // Draw a circle for input connectors
                         p.move_to(*at);
                         p.circle(*input_point, 5.0);
                         // Another circle for output connectors
@@ -295,8 +295,8 @@ impl Curve {
         frame.stroke(
             &curves,
             Stroke::default()
-            .with_width(2.0)
-            .with_color(theme.palette().text),
+                .with_width(2.0)
+                .with_color(theme.palette().text),
         );
     }
 }
@@ -324,16 +324,16 @@ impl Pending {
                     let line = Path::new(|p| {
                         p.move_to(from);
                         // p.quadratic_curve_to(*control, *to);
-                        let half_x_coord = from.x + (to.x - from.x)/2.0; 
+                        let half_x_coord = from.x + (to.x - from.x) / 2.0;
                         p.line_to(Point::new(half_x_coord, from.y));
                         p.line_to(Point::new(half_x_coord, to.y));
                         p.line_to(Point::new(to.x, to.y));
 
                         let mut arrow_offset_x = -10.0;
-                        let arrow_offset_y = 5.0; 
+                        let arrow_offset_y = 5.0;
                         if to.x < from.x {
-                            arrow_offset_x *= -1.0; 
-                        }                        
+                            arrow_offset_x *= -1.0;
+                        }
                         p.line_to(Point::new(to.x + arrow_offset_x, to.y + arrow_offset_y));
                         p.line_to(Point::new(to.x + arrow_offset_x, to.y - arrow_offset_y));
                         p.line_to(Point::new(to.x, to.y));
@@ -341,8 +341,8 @@ impl Pending {
                     frame.stroke(
                         &line,
                         Stroke::default()
-                        .with_width(2.0)
-                        .with_color(theme.palette().text),
+                            .with_width(2.0)
+                            .with_color(theme.palette().text),
                     );
                 }
             };

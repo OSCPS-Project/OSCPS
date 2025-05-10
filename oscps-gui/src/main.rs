@@ -8,6 +8,7 @@ use iced::{Center, Element, Fill, Size, Theme};
 use log::{info, debug};
 
 pub fn main() -> iced::Result {
+    // Start the GUI
     env_logger::init();
     info!("Starting application");
     iced::application("Open Source Chemical Process Simulator", MainWindow::update, MainWindow::view)

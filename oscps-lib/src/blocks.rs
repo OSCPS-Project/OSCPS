@@ -6,7 +6,7 @@
 //! For example, if a block is a simple mixer, then it will implement the
 //! MassBalance trait but not the EnergyBalance.
 
-use crate::connector::Stream;
+use crate::stream::Stream;
 use once_cell::sync::Lazy;
 use uom::si::energy::joule;
 use uom::si::f64::Energy;

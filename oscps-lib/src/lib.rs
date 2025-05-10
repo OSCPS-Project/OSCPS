@@ -7,7 +7,6 @@
 
 pub mod blocks;
 pub mod component;
-pub mod connector;
 pub mod simulation;
+pub mod stream;
 pub mod thermodynamics;
-
