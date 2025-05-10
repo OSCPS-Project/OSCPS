@@ -1,14 +1,11 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+///#OSCPS-db
+///
+///Main library folder for the OSCPS-db library crate
+///
+///will hold the methods to pull information from the POSTGRES database and from relevant APIs
+///
+///Will hold property information for chemcial property calculation
+///Will hold information about the user's simulation
 
-#[cfg(test)]
-mod tests {
-    use super::*;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub mod postgres_db;

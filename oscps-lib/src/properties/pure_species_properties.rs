@@ -23,3 +23,10 @@ pub struct PureSpeciesProperties {
     pub accentric_factor: f64::Ratio,
     pub compressibility_factor: f64::Ratio
 }
+
+///Functions to pull pure species properties from the database
+    // Database will need to handle API calls to external sources for information currently in the
+    // database.
+impl PureSpeciesProperties {
+    
+} 

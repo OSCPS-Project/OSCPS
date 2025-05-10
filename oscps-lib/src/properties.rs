@@ -94,64 +94,14 @@ pub struct ChemicalProperties {
     pub other_properties: Option<Vec<OtherProperty>>,
 }
 
-/// Implementation of the ChemicalProperties struct.
-impl ChemicalProperties {
-    // /// Constructor for the ChemicalProperties struct.
-    // pub fn new(cid: i32) -> Result<Self> {
-    //     println!("Recieving information for compound/element {cid}");
-    //     Ok(ChemicalProperties {
-    //         molar_mass: 0.0,        // kg/mol
-    //         critical_temp: 0.0,     // K
-    //         critical_pressure: 0.0, // Pa
-    //         acentric_factor: 0.0,
-    //         const_a: 0.0,
-    //         const_b: 0.0,
-    //         const_c: 0.0,
-    //         const_d: 0.0
-    //     })
-    // }
+/// Trait to group all property libraries
+trait PropertyLibrary {
+    /// default function for connecting the database to pull relevant property information
+    fn oscps_db_connection(&self) -> &db_connection;
 }
+
+
 
 #[cfg(test)]
 mod chemical_species_tests {
-    // use crate::component::{Chemical, ChemicalIdentifier};
-    // use std::{thread,time::Duration};
-
-    // #[test]
-    // fn test_create_chemical_from_pubchem_id() {
-    //     // Using a known PubChem ID, e.g., 7732 (water)
-    //     let identifier = ChemicalIdentifier::PubchemID(7732);
-
-    //     let chemical = Chemical::new(identifier);
-    //     thread::sleep(Duration::from_secs(10));
-    //     
-    //     assert!(
-    //         chemical.is_ok(),
-    //         "Failed to create chemical from PubChem ID"
-    //     );
-    //     let chemical = chemical.unwrap();
-
-    //     // Verify that the Chemical object contains the expected PubChem object
-    //     assert_eq!(chemical.get_pubchem_obj().cids().unwrap()[0], 7732);
-
-    //     // Optionally, verify that the ChemicalProperties object has been initialized
-    //     // assert_eq!(chemical.get_properties().molar_mass, 0.0); // Example check for default values
-    // }
-
-    // #[test]
-    // fn test_create_chemical_from_name() {
-    //     let identifier = ChemicalIdentifier::CompoundName(String::from("Water"));
-
-    //     let chemical = Chemical::new(identifier);
-    //     thread::sleep(Duration::from_secs(10));
-
-
-    //     assert!(chemical.is_ok(), "Failed to create chemical from name");
-    //     let chemical = chemical.unwrap();
-
-    //     // Verify that the Chemical object contains a valid name
-    //     assert_eq!(chemical.get_pubchem_obj().cids().unwrap()[0], 962);
-    //     assert_eq!(chemical.pubchem_obj.title().unwrap(), "Water");
-    //     // assert_eq!(chemical.get_properties().molar_mass, 0.0); // Example check for default values
-    // }
 }
