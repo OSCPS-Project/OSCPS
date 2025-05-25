@@ -138,10 +138,15 @@ impl StreamThermoState {
 ///Thermodynamic Packages.
 ///
 ///#ThermoPackage
-///Will be a common trait for all the thermodynamic packages
-///Will include functions common to thermodynamic packages
-///Will also enable to user to switch between thermodynamic packages within the StreamThermoState struct
 ///(the thermodynamic packages will be structs)
+///
+///Will be a common trait for all the thermodynamic packages and will include common functions.
+///Will also enable to user to switch between thermodynamic packages within the StreamThermoState struct
+///
+///The thermodynamic pacakges can be used by the blocks for any relevant calculations
+///
+///For calculations, the thermodynamic packages will call upon the property struct for relevant
+///info.
 pub trait ThermoPackage{
     ///Calculating the Enthalpy
     fn enthalpy(&self) -> MolarEnergy;
