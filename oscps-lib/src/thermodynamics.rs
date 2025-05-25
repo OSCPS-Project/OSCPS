@@ -72,11 +72,11 @@ pub struct ComponentData {
 }
 
 #[allow(dead_code)]
-/// # ThermoState
-/// Returns a thermodynamic state, including pressure, temperature, and 
-/// mole fractions.
-/// This struct will be used for streams in the flow diagram
-pub struct ThermoState {
+/// # StreamThermoState
+/// 
+/// This struct will be used for performing thermodynamic calculations for the streams in the flow
+/// diagram.
+pub struct StreamThermoState {
     /// Pressure of the state.
     pub pressure: Option<Pressure>,                    // pressure
     /// Temperature of the state.
@@ -95,12 +95,12 @@ pub struct ThermoState {
 
 
 #[allow(dead_code)]
-/// Implementation of ThermoState
+/// Implementation of StreamThermoState
 /// This struct holds the functionality to perform thermodynamic calculations for streams
-impl ThermoState {
-    /// Constructor for creating a ThermoState
+impl StreamThermoState {
+    /// Constructor for creating a StreamThermoState
     pub fn new() -> Self {
-        ThermoState {
+        StreamThermoState {
             pressure : None,
             temperature : None,
             mass_list : vec![],
@@ -110,6 +110,9 @@ impl ThermoState {
             thermodynamic_package : None
         }
     }
+    /// Public function to execute the calculations for determining the thermodynamic state for the
+    /// stream. Dependence on the Thermodynamic Packages.
+    pub fn execute_thermo_calcs(&mut self) -> Self {}
     /// this function will return the total mass for an individual stream
     fn calc_total_mass(&mut self) -> Mass {
         let mut mass_sum  = 0.0;
@@ -137,7 +140,7 @@ impl ThermoState {
 ///#ThermoPackage
 ///Will be a common trait for all the thermodynamic packages
 ///Will include functions common to thermodynamic packages
-///Will also enable to user to switch between thermodynamic packages within the ThermoState struct
+///Will also enable to user to switch between thermodynamic packages within the StreamThermoState struct
 ///(the thermodynamic packages will be structs)
 pub trait ThermoPackage{
     ///Calculating the Enthalpy
@@ -173,7 +176,7 @@ mod thermo_tests {
     // use std::{thread,time::Duration};
 
     // #[test]
-    // ///Test case generates an instance of the 'ThermoState' struct
+    // ///Test case generates an instance of the 'StreamThermoState' struct
     // fn test_create_thermo_state() {
     //     // Create some test data for ThermoMoleFrac (mole fractions)
     //     let water = Chemical {
@@ -196,14 +199,14 @@ mod thermo_tests {
     //         const_d: 0.0
     //     };
 
-    //     // Create ThermoState
-    //     let thermo_state = ThermoState::new(
+    //     // Create StreamThermoState
+    //     let thermo_state = StreamThermoState::new(
     //         101325.0,                 // pressure in Pascals (1 atm)
     //         298.15,                   // temperature in Kelvin (25°C)
     //         vec![water_species_pair], // Example with one chemical
     //     );
 
-    //     // Validate ThermoState
+    //     // Validate StreamThermoState
     //     assert_eq!(thermo_state.pressure.get::<pascal>(), 101325.0);
     //     assert_eq!(thermo_state.temperature.get::<kelvin>(), 298.15);
     //     assert_eq!(thermo_state.mass_list.len(), 1); // Should contain one mole fraction entry
@@ -222,7 +225,7 @@ mod thermo_tests {
     // }
 
     // #[test]
-    // ///Tests the mass fraction function within the 'ThermoState struct'
+    // ///Tests the mass fraction function within the 'StreamThermoState struct'
     // fn test_mass_fraction_calculation() {
     //     let water = Chemical {
     //         pubchem_obj: pubchem::Compound::new(962),
@@ -258,7 +261,7 @@ mod thermo_tests {
     //         mass_quantity: anisidine_mass,
     //     };
 
-    //     let therm_obj = ThermoState::new(
+    //     let therm_obj = StreamThermoState::new(
     //         101325.0,
     //         298.15,
     //         vec![water_species_pair, anisidine_species_pair],

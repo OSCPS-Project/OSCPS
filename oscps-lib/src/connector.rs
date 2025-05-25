@@ -1,7 +1,7 @@
 //! # Connector
 //!
 
-use crate::thermodynamics::ThermoState; 
+use crate::thermodynamics::StreamThermoState; 
 
 /// # Stream
 /// 
@@ -13,7 +13,7 @@ pub struct Stream {
     /// ID of the stream. 
     pub s_id : String,
     /// Instance of ThermoState struct that holds thermodynamic information.
-    pub thermo : Option<ThermoState>,
+    pub thermo : Option<StreamThermoState>,
     // TODO: Change these from strings to integers, or better yet, 
     // references to the source and destination blocks, to minimize
     // computation time spent on looking for sources and destinations.
