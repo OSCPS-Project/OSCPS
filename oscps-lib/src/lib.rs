@@ -7,7 +7,7 @@
 
 pub mod blocks;
 pub mod properties;
-pub mod connector;
+pub mod stream;
 pub mod simulation;
 pub mod thermodynamics;
 
