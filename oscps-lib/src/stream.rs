@@ -1,7 +1,15 @@
 //! # Connector
 //!
 
-use crate::thermodynamics::{ThermodynamicConstants, ThermoPackage}; 
+use crate::thermodynamics::{ThermodynamicConstants, MaxwellRelations}; 
+use crate::properties::Chemical;
+///Importing External Packages
+use uom::si::f64::*;
+use uom::si::mass;
+use uom::si::pressure;
+use uom::si::thermodynamic_temperature;
+use uom::si::energy;
+use uom::si::amount_of_substance;
 
 /// # Stream
 /// 
@@ -23,7 +31,6 @@ pub struct Stream {
     pub to_block : String
 }
 
-
 impl Stream {
     /// Constructor for 'Stream' struct
     pub fn new(id: String, from_blk_id : String, to_blk_id : String) -> Stream {
@@ -36,8 +43,11 @@ impl Stream {
     }
 }
 
+
 #[allow(dead_code)]
-/// Species list
+/// #ComponentData
+///
+/// Species list for a stream
 pub struct ComponentData {
     /// Chemical species
     pub chemical_species: Chemical, // will contain intrinsic properties of species
@@ -70,7 +80,7 @@ pub struct StreamThermoState {
     /// Total Volume
     pub total_volume : Option<Volume>, // total volume in stream
     ///Thermo Package
-    pub thermodynamic_package : Option<Box<dyn ThermoPackage>> // thermodynamics package 
+    pub thermodynamic_package : Option<Box<dyn MaxwellRelations>> // thermodynamics package 
 }
 
 

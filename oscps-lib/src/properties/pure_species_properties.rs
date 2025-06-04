@@ -8,7 +8,7 @@
 use crate::properties::*;
 use uom::si::f64;
 use std::sync::Arc;
-use oscps_db::*;
+// use oscps_db;
 
 ///#PureSpeciesProperties
 ///
