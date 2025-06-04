@@ -1,7 +1,6 @@
-
-///#SRKPackage
+///#EOSModel
 ///
-///Will contain equations relating to the SRK Equation of state
+///This struct will represent the different thermodynamic equations of state 
 
 
 use crate::thermodynamics::*;
@@ -15,3 +14,10 @@ use uom::si::energy;
 use uom::si::amount_of_substance;
 use uom::si::volume;
 use uom::si::ratio;
+
+
+/// This struct will hold the chemical potential equation for each type of equation of state
+/// Inspired by: https://github.com/ClapeyronThermo/Clapeyron.jl
+pub struct EOSModel {
+
+}

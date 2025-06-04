@@ -2,6 +2,5 @@
 name = "oscps-db"
 version = "0.1.0"
 authors = ["Nathaniel Thomas <nathaniel@swbell.net>", "Bhargav Akula <mail.bhargavakula@gmail.com>"]
-edition = "2025"
 
 [dependencies]

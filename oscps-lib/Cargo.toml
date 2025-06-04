@@ -2,7 +2,6 @@
 name = "oscps-lib"
 version = "0.1.0"
 authors = ["Nathaniel Thomas <nathaniel@swbell.net>", "Bhargav Akula <mail.bhargavakula@gmail.com>"]
-edition = "2024"
 
 [dependencies]
 uom  = "0.36.0"
