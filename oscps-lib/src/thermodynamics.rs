@@ -17,7 +17,6 @@ use uom::si::thermodynamic_temperature;
 use uom::si::energy;
 use uom::si::amount_of_substance;
 
-// use std::autodiff::*;
 
 #[allow(dead_code)]
 /// #ThermodynamicConstants
@@ -68,6 +67,10 @@ impl ThermodynamicConstants {
 ///
 ///For calculations, the thermodynamic packages will call upon the property struct for relevant
 ///info.
+///
+///TODO: Currently the rust std::autodiff is still experimental. Need to wait for this release. In
+///the meantime, we will either manually write out the derivatives or use a third party autdiff
+///package (the third party is: https://crates.io/crates/autodiff)
 pub trait MaxwellRelations{
     ///Calculating the Enthalpy
     fn enthalpy(&self) -> MolarEnergy;
