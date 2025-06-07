@@ -10,6 +10,7 @@ use log::{debug, info};
 pub struct State {
     cache: canvas::Cache,
     pub placement_mode: BlockPlacement,
+    pub simulation: Simulation,
 }
 
 impl State {

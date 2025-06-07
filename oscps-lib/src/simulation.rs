@@ -19,33 +19,48 @@ use std::sync::{Arc, RwLock};
 
 // }
 
-#[derive(Debug, Clone)]
-struct Settings {
+/// A struct for storing settings of the simulation
+#[derive(Debug, Clone, Default)]
+pub struct Settings {
     // Add fields as needed
 }
 
-#[derive(Debug, Clone)]
-struct SimulationState {
+/// A struct for storing the current state of the simulation
+#[derive(Debug, Clone, Default)]
+pub struct SimulationState {
     // Add fields as needed
 }
 
-// #[derive(Debug)]
-// enum Err {
-//     BlockNotFound,
-//     ConnectorNotFound,
-//     BlockExists,
-//     ConnectorExists,
-//     Other(String),
-// }
+/// An enum used to represent errors.
+#[derive(Debug)]
+pub enum Err {
+    /// Error when a block is not found
+    BlockNotFound,
+    /// Error when a connector is not found
+    ConnectorNotFound,
+    /// Error when a block with a matching ID is already in the simulation
+    BlockExists,
+    /// Error when a connector with a matching ID is already in the simulation
+    ConnectorExists,
+    /// Any other error
+    Other(String),
+}
 
+/// The Simulation struct stores information pertaining to blocks and streams
+#[derive(Default)]
 pub struct Simulation {
+    /// Stores all the blocks in the simulation
     blocks: HashMap<i32, Arc<RwLock<Box<dyn Block + Send>>>>,
+    /// Stores all the streams in the simulation
     streams: HashMap<i32, Arc<RwLock<Box<Stream>>>>,
+    /// Stores simulation settings
     settings: Settings,
+    /// Stores the state of the simlation
     state: SimulationState,
 }
 
 impl Simulation {
+    /// Create a new simultion
     pub fn new(settings: Settings, state: SimulationState) -> Self {
         Self {
             blocks: HashMap::new(),
@@ -55,13 +70,18 @@ impl Simulation {
         }
     }
 
-    //     pub fn add_block(&mut self, block_id: i32, block: Block) -> Result<(), Err> {
-    //         if self.blocks.contains_key(&block_id) {
-    //             return Err(Err::BlockExists);
-    //         }
-    //         self.blocks.insert(block_id, block);
-    //         Ok(())
-    //     }
+    /// Add a block to the simulation.
+    pub fn add_block(
+        &mut self,
+        block_id: i32,
+        block: Arc<RwLock<Box<dyn Block + Send>>>,
+    ) -> Result<(), Err> {
+        if self.blocks.contains_key(&block_id) {
+            return Err(Err::BlockExists);
+        }
+        self.blocks.insert(block_id, block);
+        Ok(())
+    }
 
     //     pub fn add_connector(&mut self, connector_id: i32, connector: Connector) -> Result<(), Err> {
     //         if self.connectors.contains_key(&connector_id) {
