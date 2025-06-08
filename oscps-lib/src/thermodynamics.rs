@@ -17,7 +17,6 @@ use uom::si::thermodynamic_temperature;
 use uom::si::energy;
 use uom::si::amount_of_substance;
 
-
 #[allow(dead_code)]
 /// #ThermodynamicConstants
 ///
