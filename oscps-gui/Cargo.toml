@@ -2,6 +2,7 @@
 name = "oscps-gui"
 version = "0.1.0"
 authors = ["Nathaniel Thomas <nathaniel@swbell.net>", "Bhargav Akula <mail.bhargavakula@gmail.com>"]
+edition = "2021"
 
 [dependencies]
 env_logger = "0.11.6"
