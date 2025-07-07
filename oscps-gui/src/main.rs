@@ -3,9 +3,9 @@ mod style;
 
 use iced::widget::pane_grid::{self, PaneGrid};
 use iced::widget::{button, column, container, horizontal_space, hover, responsive, text};
-use iced::{Center, Element, Fill, Length, Theme};
+use iced::{Center, Element, Fill, Length, Settings, Theme};
 
-use crate::icon::State;
+use icon::Icon;
 
 use log::{debug, info};
 pub fn main() -> iced::Result {
@@ -29,6 +29,15 @@ pub fn main() -> iced::Result {
     application.run()
 }
 
+// These are the structures which make up the main window
+struct MainWindow {
+    // theme: Theme,
+    panes: pane_grid::State<Pane>,
+    focus: Option<pane_grid::Pane>,
+    flowsheet: flowsheet::State,
+    components: Vec<flowsheet::Component>,
+}
+
 #[derive(Debug, Clone, Copy)]
 enum Message {
     AddedComponent(flowsheet::Component),
@@ -39,17 +48,6 @@ enum Message {
     Resized(pane_grid::ResizeEvent),
 }
 
-// These are the structures which make up the main window
-struct MainWindow {
-    // theme: Theme,
-    panes: pane_grid::State<Pane>,
-    focus: Option<pane_grid::Pane>,
-    flowsheet: flowsheet::State,
-    components: Vec<flowsheet::Component>,
-    state: icon::State,
-    state_component: flowsheet::Component,
-}
-
 impl MainWindow {
     fn new() -> Self {
         let (mut panes, pane) = pane_grid::State::new(Pane::new_selection());
@@ -57,25 +55,20 @@ impl MainWindow {
             panes.resize(split, 0.2);
         }
 
-        let state_component = flowsheet::Component::mixer();
-        let state = State::new(state_component);
-
         MainWindow {
             // theme: Theme::default(),
             panes,
             focus: None,
             flowsheet: flowsheet::State::default(),
             components: Vec::default(),
-            state,
-            state_component,
         }
     }
 
     fn update(&mut self, message: Message) {
         match message {
-            Message::AddedComponent(component) => {
+            Message::AddedComponent(curve) => {
                 info!("Added component");
-                self.components.push(component);
+                self.components.push(curve);
                 self.flowsheet.request_redraw();
             }
             // TODO: Make the clear option more deliberate (2 clicks at least)
@@ -128,18 +121,16 @@ impl MainWindow {
         &'a self,
         target_mode: flowsheet::Component,
     ) -> impl Into<Element<'a, Message>> {
-        let col = column![
-            view_content(self.state.view(target_mode).map(Message::AddedComponent)),
-            text(target_mode.to_string())
-        ];
-
         container(
-            button(container(col))
-                .style(match self.flowsheet.placement_mode {
-                    mode if mode == target_mode => button::danger,
-                    _ => button::secondary,
-                })
-                .on_press(Message::PlaceComponent(target_mode)),
+            button(container(column![
+                Icon::new(target_mode),
+                text(target_mode.to_string())
+            ]))
+            .style(match self.flowsheet.placement_mode {
+                mode if mode == target_mode => button::danger,
+                _ => button::secondary,
+            })
+            .on_press(Message::PlaceComponent(target_mode)),
         )
     }
 
@@ -224,106 +215,81 @@ impl Default for MainWindow {
 }
 
 mod icon {
-
     use crate::flowsheet;
+    use iced::advanced::layout::{self, Layout};
+    use iced::advanced::renderer;
+    use iced::advanced::widget::{self, Widget};
+    use iced::border;
     use iced::mouse;
-    use iced::widget::canvas::{self, Canvas, Stroke};
-    use iced::{Element, Rectangle};
-    use iced::{Fill, Renderer, Theme};
+    use iced::{Color, Element, Length, Rectangle, Size};
 
-    pub struct State {
-        // TODO: Find a simpler way to do icons.
-        cache: canvas::Cache,
+    pub struct Icon {
         component: flowsheet::Component,
     }
 
-    impl State {
+    impl Icon {
         pub fn new(component: flowsheet::Component) -> Self {
-            State {
-                cache: canvas::Cache::default(),
-                component,
+            Self { component }
+        }
+    }
+
+    pub fn icon(component: flowsheet::Component) -> Icon {
+        Icon::new(component)
+    }
+
+    impl<Message, Theme, Renderer> Widget<Message, Theme, Renderer> for Icon
+    where
+        Renderer: renderer::Renderer,
+    {
+        fn size(&self) -> Size<Length> {
+            Size {
+                width: Length::Shrink,
+                height: Length::Shrink,
             }
         }
 
-        pub fn view<'a>(
-            &'a self,
-            component: flowsheet::Component,
-        ) -> Element<'a, flowsheet::Component> {
-            Canvas::new(Icon {
-                state: self,
-                component,
-            })
-            .width(Fill)
-            .height(Fill)
-            .height(Fill)
-            .into()
+        fn layout(
+            &self,
+            _tree: &mut widget::Tree,
+            _renderer: &Renderer,
+            _limits: &layout::Limits,
+        ) -> layout::Node {
+            let hard_size = 100.0; // HACK: Temporary, figure out a more elegant solution later.
+            layout::Node::new(Size::new(hard_size, hard_size))
         }
-
-        pub fn request_redraw(&mut self) {
-            self.cache.clear();
-        }
-    }
-    pub struct Icon<'a> {
-        state: &'a State,
-        component: flowsheet::Component,
-    }
-
-    impl<'a> canvas::Program<flowsheet::Component> for Icon<'a> {
-        type State = Option<flowsheet::Component>;
 
         fn draw(
             &self,
-            _state: &Self::State,
-            renderer: &Renderer,
-            theme: &Theme,
-            bounds: Rectangle,
+            state: &widget::Tree,
+            renderer: &mut Renderer,
+            _theme: &Theme,
+            _style: &renderer::Style,
+            layout: Layout<'_>,
             _cursor: mouse::Cursor,
-        ) -> Vec<canvas::Geometry> {
-            let content = self.state.cache.draw(renderer, bounds.size(), |frame| {
-                let mut builder = canvas::path::Builder::new();
+            _viewport: &Rectangle,
+        ) {
+            let hard_size = 50.0; // HACK: Again, temporary
 
-                match self.component {
-                    flowsheet::Component::Source { .. } => flowsheet::Component::draw_source(
-                        &mut builder,
-                        (0.0, 0.0).into(),
-                        (50.0, 50.0).into(),
-                    ),
-                    flowsheet::Component::Sink { .. } => flowsheet::Component::draw_sink(
-                        &mut builder,
-                        (0.0, 0.0).into(),
-                        (0.0, 50.0).into(),
-                    ),
-                    flowsheet::Component::Mixer { .. } => flowsheet::Component::draw_mixer(
-                        &mut builder,
-                        (0.0, 0.0).into(),
-                        (-50.0, 50.0).into(),
-                        (50.0, 50.0).into(),
-                    ),
-                    flowsheet::Component::Connector { .. } => println!("Naw"),
-                }
+            // TODO: Placeholder for when custom widgets have better support.
 
-                let path = builder.build();
-
-                frame.stroke(
-                    &path,
-                    Stroke::default()
-                        .with_width(10.0)
-                        .with_color(theme.palette().text),
-                );
-            });
-
-            vec![content]
+            renderer.fill_quad(
+                renderer::Quad {
+                    bounds: layout.bounds(),
+                    border: border::rounded(hard_size),
+                    ..renderer::Quad::default()
+                },
+                Color::BLACK,
+            );
         }
     }
-
-    // impl<Message, Theme, Renderer> From<Icon> for Element<'_, Message, Theme, Renderer>
-    // where
-    //     Renderer: renderer::Renderer,
-    // {
-    //     fn from(icon: Icon) -> Self {
-    //         Self::new(icon)
-    //     }
-    // }
+    impl<Message, Theme, Renderer> From<Icon> for Element<'_, Message, Theme, Renderer>
+    where
+        Renderer: renderer::Renderer,
+    {
+        fn from(icon: Icon) -> Self {
+            Self::new(icon)
+        }
+    }
 }
 
 #[derive(Clone, Copy, Default)]
