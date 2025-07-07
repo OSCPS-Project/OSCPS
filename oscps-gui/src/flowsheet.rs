@@ -1,23 +1,23 @@
 use iced::mouse;
 use iced::widget::canvas::event::{self, Event};
-use iced::widget::canvas::{self, Canvas, Frame, Geometry, Path, Stroke};
+use iced::widget::canvas::path::Builder;
+use iced::widget::canvas::{self, Cache, Canvas, Frame, Geometry, Path, Stroke};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Theme};
-use oscps_lib::simulation::Simulation;
 
 use log::{debug, info};
+use strum_macros::Display;
 
 #[derive(Default)]
 pub struct State {
     cache: canvas::Cache,
-    pub placement_mode: BlockPlacement,
-    pub simulation: Simulation,
+    pub placement_mode: Component,
 }
 
 impl State {
-    pub fn view<'a>(&'a self, curves: &'a [Curve]) -> Element<'a, Curve> {
+    pub fn view<'a>(&'a self, components: &'a [Component]) -> Element<'a, Component> {
         Canvas::new(Flowsheet {
             state: self,
-            curves,
+            components,
         })
         .width(Fill)
         .height(Fill)
@@ -29,111 +29,362 @@ impl State {
     }
 }
 
-// Allows detection of "block placement mode", as well as which block to place.
-#[derive(Debug, Clone, Copy)]
-pub enum BlockPlacement {
-    Connector,
-    Mixer,
-    Default,
+#[derive(Display, Debug, Clone, Copy, PartialEq)]
+pub enum Component {
+    Connector {
+        from: Option<Point>,
+        to: Option<Point>,
+    },
+    Mixer {
+        at: Option<Point>,
+        input: Option<Point>,
+        output: Option<Point>,
+    },
+    Source {
+        at: Option<Point>,
+        output: Option<Point>,
+    },
+    Sink {
+        at: Option<Point>,
+        input: Option<Point>,
+    },
 }
 
-impl Default for BlockPlacement {
+impl Component {
+    pub fn connector() -> Self {
+        Component::Connector {
+            from: None,
+            to: None,
+        }
+    }
+
+    pub fn source() -> Self {
+        Component::Source {
+            at: None,
+            output: None,
+        }
+    }
+    pub fn sink() -> Self {
+        Component::Sink {
+            at: None,
+            input: None,
+        }
+    }
+    pub fn mixer() -> Self {
+        Component::Mixer {
+            at: None,
+            input: None,
+            output: None,
+        }
+    }
+
+    // Determine if cursor is within 5 pixels of a given point.
+    fn is_in_bounds(&self, cursor_position: Point, input: Option<Point>) -> bool {
+        info!(
+            "Checking input bounds with cursor at ({}, {})",
+            cursor_position.x, cursor_position.y
+        );
+
+        match input {
+            None => false, // If the input is none, it is not in bounds.
+            Some(input) => {
+                // TODO: (minor) Fix arbitrary 5-pixel bounding box. Make dynamic/program setting.
+                let bound = 5.0;
+                if cursor_position.x > input.x - bound && cursor_position.x < input.x + bound {
+                    debug!("Bound x match!");
+                    if cursor_position.y > input.y - bound && cursor_position.y < input.y + bound {
+                        info!("Bounds match!");
+                        return true;
+                    }
+                }
+                false
+            }
+        }
+    }
+
+    // Determine if the cursor is in bounds of the input
+    fn on_input(&self, cursor_position: Point) -> bool {
+        let input = self.get_input();
+        self.is_in_bounds(cursor_position, input)
+    }
+
+    // Determine if the cursor is in bounds of the output
+    fn get_input(&self) -> Option<Point> {
+        return match self {
+            Component::Connector { from, .. } => *from,
+            Component::Mixer { input, .. } => *input,
+            Component::Sink { input, .. } => *input,
+            Component::Source { .. } => None, // Source does not have an input
+        };
+    }
+
+    fn on_output(&self, cursor_position: Point) -> bool {
+        let output = self.get_output();
+        self.is_in_bounds(cursor_position, output)
+    }
+
+    fn get_output(&self) -> Option<Point> {
+        return match self {
+            Component::Connector { to, .. } => *to,
+            Component::Mixer { output, .. } => *output,
+            Component::Source { output, .. } => *output,
+            Component::Sink { .. } => None, // Sink does not have an output
+        };
+    }
+
+    fn draw_all(components: &[Component], frame: &mut Frame, theme: &Theme) {
+        // TODO: (minor) Nitpicky, but this uses dynamic memory uncessesarily.
+        // Consider changing the function name fetching to a macro approach.
+        let function_name = std::any::type_name::<fn()>()
+            .split("::")
+            .last()
+            .unwrap_or("unknown");
+        let expect_string = format!(
+            "{} should should only be called with existing points.",
+            function_name
+        );
+        let components = Path::new(|p| {
+            for component in components {
+                match component {
+                    Component::Connector { from, to } => {
+                        let from = from.expect(&expect_string);
+                        let to = to.expect(&expect_string);
+
+                        Component::draw_connector(p, to, from)
+                    }
+                    Component::Mixer { at, input, output } => {
+                        let at = at.expect(&expect_string);
+                        let input = input.expect(&expect_string);
+                        let output = output.expect(&expect_string);
+
+                        Component::draw_mixer(p, at, input, output)
+                    }
+                    Component::Source { at, output } => {
+                        let at = at.expect(&expect_string);
+                        let output = output.expect(&expect_string);
+
+                        Component::draw_source(p, at, output)
+                    }
+                    Component::Sink { at, input } => {
+                        let at = at.expect(&expect_string);
+                        let input = input.expect(&expect_string);
+
+                        Component::draw_sink(p, at, input)
+                    }
+                }
+            }
+        });
+
+        frame.stroke(
+            &components,
+            Stroke::default()
+                .with_width(2.0)
+                .with_color(theme.palette().text),
+        );
+    }
+
+    pub fn draw_connector(p: &mut Builder, to: Point, from: Point) {
+        debug!("Drawing connector");
+        p.move_to(from);
+        let half_x_coord = from.x + (to.x - from.x) / 2.0;
+        p.line_to(Point::new(half_x_coord, from.y));
+        p.line_to(Point::new(half_x_coord, to.y));
+        p.line_to(Point::new(to.x, to.y));
+        let mut arrow_offset_x = -10.0;
+        let arrow_offset_y = 5.0;
+        if to.x < from.x {
+            arrow_offset_x *= -1.0;
+        }
+        p.line_to(Point::new(to.x + arrow_offset_x, to.y + arrow_offset_y));
+        p.line_to(Point::new(to.x + arrow_offset_x, to.y - arrow_offset_y));
+        p.line_to(Point::new(to.x, to.y));
+    }
+
+    pub fn draw_mixer(p: &mut Builder, at: Point, input: Point, output: Point) {
+        debug!("Drawing mixer.");
+
+        p.move_to(at);
+        let bottom_point = Point::new(at.x, at.y + 100.0);
+        let middle_point = Point::new(at.x + 100.0, at.y + 50.0);
+        p.line_to(bottom_point);
+        p.line_to(middle_point);
+        p.line_to(at);
+
+        // Draw a circle for input connectors
+        p.move_to(at);
+        p.circle(input, 5.0);
+        // Another circle for output connectors
+        p.move_to(at);
+        p.circle(output, 5.0);
+    }
+
+    pub fn draw_source(p: &mut Builder, at: Point, output: Point) {
+        debug!("Drawing source.");
+
+        p.move_to(at);
+        p.rectangle(at, (50.0, 100.0).into());
+
+        // Circle for output
+        p.circle(output, 5.0);
+    }
+
+    pub fn draw_sink(p: &mut Builder, at: Point, input: Point) {
+        debug!("Drawing sink.");
+
+        p.move_to(at);
+        p.rectangle(at, (50.0, 100.0).into());
+
+        // Circle for input
+        p.move_to(at);
+        p.circle(input, 5.0);
+    }
+}
+
+// Declare the default block to be the humble connector.
+impl Default for Component {
     fn default() -> Self {
-        BlockPlacement::Default
+        Component::Connector {
+            from: None,
+            to: None,
+        }
     }
 }
 
 struct Flowsheet<'a> {
     state: &'a State,
-    curves: &'a [Curve],
+    components: &'a [Component],
 }
 
-impl<'a> canvas::Program<Curve> for Flowsheet<'a> {
+impl<'a> Flowsheet<'a> {
+    fn place_sink(cursor_position: Point) -> Option<Component> {
+        let input = Point::new(cursor_position.x - 5.0, cursor_position.y + 50.0);
+        info!(
+            "Creating source at ({}, {}) with input at ({}, {}).",
+            cursor_position.x, cursor_position.y, input.x, input.y
+        );
+        Some(Component::Sink {
+            at: Some(cursor_position),
+            input: Some(input),
+        })
+    }
+
+    fn place_source(cursor_position: Point) -> Option<Component> {
+        let output = Point::new(cursor_position.x + 55.0, cursor_position.y + 50.0);
+        info!(
+            "Creating source at ({}, {}) with output at ({}, {}).",
+            cursor_position.x, cursor_position.y, output.x, output.y
+        );
+        Some(Component::Source {
+            at: Some(cursor_position),
+            output: Some(output),
+        })
+    }
+
+    // Helper function to place a mixer block
+    fn place_mixer(cursor_position: Point) -> Option<Component> {
+        let input = Point::new(cursor_position.x - 5.0, cursor_position.y + 50.0);
+        let output = Point::new(cursor_position.x + 105.0, cursor_position.y + 50.0);
+        info!(
+            "Creating mixer at ({}, {}) with input at ({}, {}) and output at ({}, {})",
+            cursor_position.x, cursor_position.y, input.x, input.y, output.x, output.y
+        );
+        Some(Component::Mixer {
+            at: Some(cursor_position),
+            input: Some(input),
+            output: Some(output),
+        })
+    }
+
+    // Helper function to connect a connector to an input/output.
+    fn place_connector(
+        &self,
+        state: &mut Option<Pending>,
+        cursor_position: Point,
+    ) -> Option<Component> {
+        let floating_connectors = false; // HACK: Disallow floating connectors
+        match state {
+            None => {
+                info!("Beginning creation of connector...");
+                let mut result = Some(Pending::One {
+                    from: cursor_position,
+                });
+
+                for component in self.components {
+                    if !matches!(component, Component::Connector { .. })
+                        && component.on_output(cursor_position)
+                    {
+                        info!("Connected to input!");
+                        result = Some(Pending::One {
+                            // NOTE: Should be safe. This must be Some(..) if
+                            // on_output returned true.
+                            from: component.get_output().unwrap(),
+                        });
+                        *state = result;
+                        return None;
+                    }
+                }
+                if floating_connectors {
+                    *state = result;
+                }
+                None
+            }
+            Some(Pending::One { from }) => {
+                info!("Created connector.");
+                let from = *from;
+                let mut result = Some(Component::Connector {
+                    from: Some(from),
+                    to: Some(cursor_position),
+                });
+                for component in self.components {
+                    if !matches!(component, Component::Connector { .. })
+                        && component.on_input(cursor_position)
+                    {
+                        info!("Connected to input!");
+                        result = Some(Component::Connector {
+                            from: Some(from),
+                            // NOTE: Should be safe, on_input() returned true.
+                            to: Some(component.get_input().unwrap()),
+                        });
+                        *state = None;
+                        return result;
+                    }
+                }
+                if floating_connectors {
+                    *state = None;
+                    result
+                } else {
+                    None
+                }
+            }
+        }
+    }
+}
+
+impl<'a> canvas::Program<Component> for Flowsheet<'a> {
     type State = Option<Pending>;
+
     fn update(
         &self,
         state: &mut Self::State,
         event: Event,
         bounds: Rectangle,
         cursor: mouse::Cursor,
-    ) -> (event::Status, Option<Curve>) {
+    ) -> (event::Status, Option<Component>) {
         let Some(cursor_position) = cursor.position_in(bounds) else {
             return (event::Status::Ignored, None);
         };
-        // TODO: Do not allow a user to connect the input of a stream to the
-        // output of a block and vice-versa.
         match event {
             Event::Mouse(mouse_event) => {
                 let message = match mouse_event {
                     mouse::Event::ButtonPressed(mouse::Button::Left) => {
                         info!("Click detected at ({})", cursor_position);
                         match self.state.placement_mode {
-                            BlockPlacement::Connector => {
-                                match *state {
-                                    None => {
-                                        info!("Beginning creation of connector...");
-                                        let mut result = Some(Pending::One {
-                                            from: cursor_position,
-                                        });
-                                        for curve in self.curves {
-                                            if !matches!(curve, Curve::Connector { .. })
-                                                && curve.on_output_connector(cursor_position)
-                                            {
-                                                info!("Connected to input!");
-                                                result = Some(Pending::One {
-                                                    from: curve.get_output_point(),
-                                                });
-                                                break;
-                                            }
-                                        }
-                                        *state = result;
-                                        None
-                                    }
-                                    Some(Pending::One { from }) => {
-                                        info!("Created connector.");
-                                        *state = None;
-                                        let mut result = Some(Curve::Connector {
-                                            from,
-                                            to: cursor_position,
-                                        });
-                                        for curve in self.curves {
-                                            if !matches!(curve, Curve::Connector { .. })
-                                                && curve.on_input_connector(cursor_position)
-                                            {
-                                                info!("Connected to input!");
-                                                result = Some(Curve::Connector {
-                                                    from,
-                                                    to: curve.get_input_point(),
-                                                });
-                                                break;
-                                            }
-                                        }
-                                        result
-                                    } // Some(Pending::Two { from, to }) => {
-                                      //     *state = None;
-                                      //     Some(Curve::Connector {
-                                      //         from,
-                                      //         to,
-                                      //     })
-                                      // }
-                                }
+                            Component::Connector { .. } => {
+                                Flowsheet::place_connector(&self, state, cursor_position)
                             }
-                            BlockPlacement::Mixer => {
-                                let input_point =
-                                    Point::new(cursor_position.x - 5.0, cursor_position.y + 50.0);
-                                let output_point =
-                                    Point::new(cursor_position.x + 105.0, cursor_position.y + 50.0);
-                                info!("Creating mixer at ({}, {}) with input at ({}, {}) and output at ({}, {})", cursor_position.x, cursor_position.y, input_point.x, input_point.y, output_point.x, output_point.y);
-                                Some(Curve::Mixer {
-                                    at: cursor_position,
-                                    input_point,
-                                    output_point,
-                                })
-                            }
-                            BlockPlacement::Default => {
-                                // TODO: Add code for selecting stuff
-                                None
-                            }
+                            Component::Mixer { .. } => Flowsheet::place_mixer(cursor_position),
+                            Component::Source { .. } => Flowsheet::place_source(cursor_position),
+                            Component::Sink { .. } => Flowsheet::place_sink(cursor_position),
                         }
                     }
                     // Right click should cancel placement.
@@ -160,27 +411,38 @@ impl<'a> canvas::Program<Curve> for Flowsheet<'a> {
         cursor: mouse::Cursor,
     ) -> Vec<Geometry> {
         let content = self.state.cache.draw(renderer, bounds.size(), |frame| {
-            Curve::draw_all(self.curves, frame, theme);
+            Component::draw_all(self.components, frame, theme);
+            // Border frame
             frame.stroke(
                 &Path::rectangle(Point::ORIGIN, frame.size()),
                 Stroke::default()
-                    .with_width(20.0)
+                    .with_width(10.0)
                     .with_color(theme.palette().text),
             );
         });
         if let Some(pending) = state {
-            vec![content, pending.draw(renderer, theme, bounds, cursor)]
+            vec![content, pending.draw(renderer, theme, bounds, cursor)] // Connector being drawn
         } else {
-            vec![content]
+            vec![content] // Just draw current content.
         }
     }
+
     fn mouse_interaction(
         &self,
         _state: &Self::State,
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> mouse::Interaction {
+        let Some(cursor_position) = cursor.position_in(bounds) else {
+            return mouse::Interaction::default();
+        };
+
         if cursor.is_over(bounds) {
+            for component in self.components {
+                if component.on_input(cursor_position) || component.on_output(cursor_position) {
+                    return mouse::Interaction::Grab;
+                }
+            }
             mouse::Interaction::Crosshair
         } else {
             mouse::Interaction::default()
@@ -189,123 +451,8 @@ impl<'a> canvas::Program<Curve> for Flowsheet<'a> {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub enum Curve {
-    Connector {
-        from: Point,
-        to: Point,
-    },
-    Mixer {
-        at: Point,
-        input_point: Point,
-        output_point: Point,
-    },
-}
-
-impl Curve {
-    fn on_input_connector(&self, cursor_position: Point) -> bool {
-        // TODO: Fix arbitrary 5-pixel bounding box. Ideally use a circular bound.
-        let input = self.get_input_point();
-        info!(
-            "Checking input bounds with cursor at ({}, {})",
-            cursor_position.x, cursor_position.y
-        );
-        if cursor_position.x > input.x - 5.0 && cursor_position.x < input.x + 5.0 {
-            debug!("Bound x match!");
-            if cursor_position.y > input.y - 5.0 && cursor_position.y < input.y + 5.0 {
-                info!("Bounds match!");
-                return true;
-            }
-        }
-        false
-    }
-
-    fn get_input_point(&self) -> Point {
-        return match self {
-            Curve::Connector { from, .. } => *from,
-            Curve::Mixer { input_point, .. } => *input_point,
-        };
-    }
-
-    fn on_output_connector(&self, cursor_position: Point) -> bool {
-        let output = self.get_output_point();
-        info!(
-            "Checking output bounds with cursor at ({}, {})",
-            cursor_position.x, cursor_position.y
-        );
-        if cursor_position.x > output.x - 5.0 && cursor_position.x < output.x + 5.0 {
-            debug!("Bound x match!");
-            if cursor_position.y > output.y - 5.0 && cursor_position.y < output.y + 5.0 {
-                info!("Bounds match!");
-                return true;
-            }
-        }
-        false
-    }
-
-    fn get_output_point(&self) -> Point {
-        return match self {
-            Curve::Connector { to, .. } => *to,
-            Curve::Mixer { output_point, .. } => *output_point,
-        };
-    }
-    fn draw_all(curves: &[Curve], frame: &mut Frame, theme: &Theme) {
-        let curves = Path::new(|p| {
-            for curve in curves {
-                match curve {
-                    Curve::Connector { from, to } => {
-                        debug!("Drawing connector");
-                        p.move_to(*from);
-                        // p.quadratic_curve_to(*control, *to);
-                        let half_x_coord = from.x + (to.x - from.x) / 2.0;
-                        p.line_to(Point::new(half_x_coord, from.y));
-                        p.line_to(Point::new(half_x_coord, to.y));
-                        p.line_to(Point::new(to.x, to.y));
-                        let mut arrow_offset_x = -10.0;
-                        let arrow_offset_y = 5.0;
-                        if to.x < from.x {
-                            arrow_offset_x *= -1.0;
-                        }
-                        p.line_to(Point::new(to.x + arrow_offset_x, to.y + arrow_offset_y));
-                        p.line_to(Point::new(to.x + arrow_offset_x, to.y - arrow_offset_y));
-                        p.line_to(Point::new(to.x, to.y));
-                    }
-                    Curve::Mixer {
-                        at,
-                        input_point,
-                        output_point,
-                    } => {
-                        debug!("Drawing mixer.");
-                        p.move_to(*at);
-                        // p.rectangle(*at, Size::new(200.0, 200.0));
-                        let bottom_point = Point::new(at.x, at.y + 100.0);
-                        let middle_point = Point::new(at.x + 100.0, at.y + 50.0);
-                        p.line_to(bottom_point);
-                        p.line_to(middle_point);
-                        p.line_to(*at);
-                        // Draw a circle for input connectors
-                        p.move_to(*at);
-                        p.circle(*input_point, 5.0);
-                        // Another circle for output connectors
-                        p.move_to(*at);
-                        p.circle(*output_point, 5.0);
-                    }
-                }
-            }
-        });
-
-        frame.stroke(
-            &curves,
-            Stroke::default()
-                .with_width(2.0)
-                .with_color(theme.palette().text),
-        );
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
 enum Pending {
     One { from: Point },
-    // Two { from: Point, to: Point },
 }
 
 impl Pending {
@@ -324,7 +471,6 @@ impl Pending {
                     let to = cursor_position;
                     let line = Path::new(|p| {
                         p.move_to(from);
-                        // p.quadratic_curve_to(*control, *to);
                         let half_x_coord = from.x + (to.x - from.x) / 2.0;
                         p.line_to(Point::new(half_x_coord, from.y));
                         p.line_to(Point::new(half_x_coord, to.y));
