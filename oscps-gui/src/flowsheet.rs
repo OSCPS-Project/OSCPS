@@ -1,10 +1,13 @@
 use iced::mouse;
 use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::path::Builder;
-use iced::widget::canvas::{self, Cache, Canvas, Frame, Geometry, Path, Stroke};
+use iced::widget::canvas::{self, Canvas, Frame, Geometry, Path, Stroke};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Theme};
+use oscps_lib::simulation::Simulation;
 
-use log::{debug, info};
+use std::time::{Duration, SystemTime};
+
+use log::{debug, info, warn};
 use strum_macros::Display;
 
 #[derive(Default)]
@@ -14,10 +17,16 @@ pub struct State {
 }
 
 impl State {
-    pub fn view<'a>(&'a self, components: &'a [Component]) -> Element<'a, Component> {
+    pub fn view<'a>(
+        &'a self,
+        components: &'a [Component],
+        simulation: &'a Simulation,
+    ) -> Element<'a, Component> {
         Canvas::new(Flowsheet {
             state: self,
             components,
+            left_click_time: SystemTime::now(),
+            simulation,
         })
         .width(Fill)
         .height(Fill)
@@ -79,33 +88,31 @@ impl Component {
     }
 
     // Determine if cursor is within 5 pixels of a given point.
-    fn is_in_bounds(&self, cursor_position: Point, input: Option<Point>) -> bool {
+    fn is_in_bounds(&self, cursor_position: Point, input: Point) -> bool {
         info!(
             "Checking input bounds with cursor at ({}, {})",
             cursor_position.x, cursor_position.y
         );
 
-        match input {
-            None => false, // If the input is none, it is not in bounds.
-            Some(input) => {
-                // TODO: (minor) Fix arbitrary 5-pixel bounding box. Make dynamic/program setting.
-                let bound = 5.0;
-                if cursor_position.x > input.x - bound && cursor_position.x < input.x + bound {
-                    debug!("Bound x match!");
-                    if cursor_position.y > input.y - bound && cursor_position.y < input.y + bound {
-                        info!("Bounds match!");
-                        return true;
-                    }
-                }
-                false
+        // TODO: (minor) Fix arbitrary 5-pixel bounding box. Make dynamic/program setting.
+        let bound = 5.0;
+        if cursor_position.x > input.x - bound && cursor_position.x < input.x + bound {
+            debug!("Bound x match!");
+            if cursor_position.y > input.y - bound && cursor_position.y < input.y + bound {
+                info!("Bounds match!");
+                return true;
             }
         }
+        false
     }
 
     // Determine if the cursor is in bounds of the input
     fn on_input(&self, cursor_position: Point) -> bool {
         let input = self.get_input();
-        self.is_in_bounds(cursor_position, input)
+        match input {
+            Some(point) => self.is_in_bounds(cursor_position, point),
+            None => false,
+        }
     }
 
     // Determine if the cursor is in bounds of the output
@@ -120,7 +127,10 @@ impl Component {
 
     fn on_output(&self, cursor_position: Point) -> bool {
         let output = self.get_output();
-        self.is_in_bounds(cursor_position, output)
+        match output {
+            Some(point) => self.is_in_bounds(cursor_position, point),
+            None => false,
+        }
     }
 
     fn get_output(&self) -> Option<Point> {
@@ -253,6 +263,8 @@ impl Default for Component {
 struct Flowsheet<'a> {
     state: &'a State,
     components: &'a [Component],
+    left_click_time: SystemTime,
+    simulation: &'a Simulation,
 }
 
 impl<'a> Flowsheet<'a> {
@@ -378,11 +390,27 @@ impl<'a> canvas::Program<Component> for Flowsheet<'a> {
                 let message = match mouse_event {
                     mouse::Event::ButtonPressed(mouse::Button::Left) => {
                         info!("Click detected at ({})", cursor_position);
+                        let current_time = SystemTime::now();
+
+                        match current_time.duration_since(self.left_click_time) {
+                            Ok(elapsed) => {
+                                if elapsed < Duration::from_millis(200) {
+                                    println!("Double click!")
+                                }
+                            }
+                            Err(e) => {
+                                warn!("Error {} when detecting double click.", e)
+                            }
+                        }
+
                         match self.state.placement_mode {
                             Component::Connector { .. } => {
                                 Flowsheet::place_connector(&self, state, cursor_position)
                             }
-                            Component::Mixer { .. } => Flowsheet::place_mixer(cursor_position),
+                            Component::Mixer { .. } => {
+                                self.simulation;
+                                Flowsheet::place_mixer(cursor_position)
+                            }
                             Component::Source { .. } => Flowsheet::place_source(cursor_position),
                             Component::Sink { .. } => Flowsheet::place_sink(cursor_position),
                         }
@@ -395,6 +423,7 @@ impl<'a> canvas::Program<Component> for Flowsheet<'a> {
                     }
                     _ => None,
                 };
+
                 (event::Status::Captured, message)
             }
             Event::Keyboard(_) => (event::Status::Captured, None),
@@ -429,7 +458,7 @@ impl<'a> canvas::Program<Component> for Flowsheet<'a> {
 
     fn mouse_interaction(
         &self,
-        _state: &Self::State,
+        state: &Self::State,
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> mouse::Interaction {
@@ -437,13 +466,36 @@ impl<'a> canvas::Program<Component> for Flowsheet<'a> {
             return mouse::Interaction::default();
         };
 
+        // Only display a grab icon if placing a connector, and
+        // the connector is hovering over an input when in input mode, or over
+        // an output when in output mode.
         if cursor.is_over(bounds) {
-            for component in self.components {
-                if component.on_input(cursor_position) || component.on_output(cursor_position) {
-                    return mouse::Interaction::Grab;
+            match self.state.placement_mode {
+                Component::Connector { .. } => {
+                    for component in self.components {
+                        match component {
+                            Component::Connector { .. } => (),
+                            _ => match state {
+                                Some(Pending::One { .. }) => {
+                                    if component.on_input(cursor_position) {
+                                        println!("Some");
+                                        return mouse::Interaction::Grab;
+                                    }
+                                }
+                                None => {
+                                    if component.on_output(cursor_position) {
+                                        println!("Component: {}", component);
+                                        println!("None");
+                                        return mouse::Interaction::Grab;
+                                    }
+                                }
+                            },
+                        }
+                    }
+                    mouse::Interaction::Crosshair
                 }
+                _ => mouse::Interaction::Crosshair,
             }
-            mouse::Interaction::Crosshair
         } else {
             mouse::Interaction::default()
         }

@@ -3,11 +3,14 @@ mod style;
 
 use iced::widget::pane_grid::{self, PaneGrid};
 use iced::widget::{button, column, container, horizontal_space, hover, responsive, text};
-use iced::{Center, Element, Fill, Length, Settings, Theme};
+use iced::{Center, Element, Fill, Length, Theme};
+
+use oscps_lib::simulation::{self, Settings, Simulation};
 
 use icon::Icon;
 
 use log::{debug, info};
+
 pub fn main() -> iced::Result {
     // Start the GUI env_logger::init();
     info!("Starting application");
@@ -30,12 +33,14 @@ pub fn main() -> iced::Result {
 }
 
 // These are the structures which make up the main window
+#[allow(dead_code)]
 struct MainWindow {
     // theme: Theme,
     panes: pane_grid::State<Pane>,
     focus: Option<pane_grid::Pane>,
     flowsheet: flowsheet::State,
     components: Vec<flowsheet::Component>,
+    simulation: Simulation,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -55,21 +60,35 @@ impl MainWindow {
             panes.resize(split, 0.2);
         }
 
+        let settings = Settings::default();
+
         MainWindow {
             // theme: Theme::default(),
             panes,
             focus: None,
             flowsheet: flowsheet::State::default(),
             components: Vec::default(),
+            simulation: Simulation::new(settings),
         }
     }
 
     fn update(&mut self, message: Message) {
         match message {
-            Message::AddedComponent(curve) => {
+            Message::AddedComponent(component) => {
                 info!("Added component");
-                self.components.push(curve);
+                self.components.push(component);
                 self.flowsheet.request_redraw();
+                match component {
+                    flowsheet::Component::Source{ ..}  => todo!(),
+                    flowsheet::Component::Sink{ ..} => todo!(),
+                    flowsheet::Component::Mixer{ ..} => {
+                        self.simulation.add_block(simulation::BlockType::Mixer);
+                    },
+                    flowsheet::Component::Connector{ .. } => { 
+                        // self.simulation.add_stream(simulation::BlockType::Mixer);
+                        todo!();
+                    },
+                }
             }
             // TODO: Make the clear option more deliberate (2 clicks at least)
             Message::Clear => {
@@ -173,7 +192,7 @@ impl MainWindow {
                     pane_grid::Content::new(responsive(move |_size| {
                         view_content(hover(
                             self.flowsheet
-                                .view(&self.components)
+                                .view(&self.components, &self.simulation)
                                 .map(Message::AddedComponent),
                             if self.components.is_empty() {
                                 container(horizontal_space())
@@ -224,15 +243,18 @@ mod icon {
     use iced::{Color, Element, Length, Rectangle, Size};
 
     pub struct Icon {
-        component: flowsheet::Component,
+        // component: flowsheet::Component,
     }
 
     impl Icon {
-        pub fn new(component: flowsheet::Component) -> Self {
-            Self { component }
+        pub fn new(_component: flowsheet::Component) -> Self {
+            Self { 
+                // component
+            }
         }
     }
 
+    #[allow(dead_code)]
     pub fn icon(component: flowsheet::Component) -> Icon {
         Icon::new(component)
     }
@@ -260,7 +282,7 @@ mod icon {
 
         fn draw(
             &self,
-            state: &widget::Tree,
+            _state: &widget::Tree,
             renderer: &mut Renderer,
             _theme: &Theme,
             _style: &renderer::Style,
