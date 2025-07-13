@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
-authors = ["Nathaniel Thomas <nathaniel@swbell.net>", "Bhargav Akula <mail.bhargavakula@gmail.com>"]
-edition = "2024"
-members = [ "oscps-db", "oscps-gui",
+
+members = [ 
+    "oscps-gui",
     "oscps-lib",
     ]
