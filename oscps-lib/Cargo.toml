@@ -1,14 +1,16 @@
 [package]
 name = "oscps-lib"
 version = "0.1.0"
+authors = ["Nathaniel Thomas <nathaniel@swbell.net>", "Bhargav Akula <mail.bhargavakula@gmail.com>"]
 edition = "2021"
 
 [dependencies]
-uom  = "0.36.0"
+uom  = "0.37.0"
 once_cell = "1.17.1"
 pubchem = "0.1.1"
-reqwest = { version = "0.11", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1", features = ["full"] }
 anyhow = "1.0"
+autodiff = "0.7.0"
+oscps-db = { path = "../oscps-db" }
