@@ -6,12 +6,14 @@
 //! For example, if a block is a simple mixer, then it will implement the
 //! MassBalance trait but not the EnergyBalance.
 
-use crate::connector::Stream;
+use crate::stream::Stream;
 use once_cell::sync::Lazy;
 use uom::si::energy::joule;
 use uom::si::f64::Energy;
 use uom::si::f64::Mass;
 use uom::si::mass::kilogram;
+
+use crate::simulation::StreamReference;
 
 /// # Block
 ///
@@ -42,6 +44,7 @@ pub trait Block {
 ///
 /// A Separator block that allows components of a stream to be separated.
 /// Allows for a single input and an arbitrary number of outputs.
+#[allow(dead_code)]
 struct Separator {
     id: u64,
     input: Option<Stream>, // An option is used in case there is no input stream
@@ -49,6 +52,7 @@ struct Separator {
                           // TODO: Add additional fields that controls how components are separated
 }
 
+#[allow(dead_code)]
 impl Separator {
     fn new(id: u64) -> Self {
         Separator {
@@ -65,30 +69,25 @@ impl Separator {
 /// A block used for simple stream mixing operations. Spacial information
 /// is not stored in the case that non-gui applications use this backend.
 pub struct Mixer {
-    /// The ID of the block.
-    pub id: u64,
     /// Set of inlet streams for the mixer
-    pub inputs: Vec<Box<Stream>>,
-    /// outlet stream for the mixer block
-    pub output: Option<Box<Stream>>,
+    pub inputs: Option<Vec<StreamReference>>,
+    /// Outlet stream for the mixer block
+    pub output: Option<StreamReference>,
 }
 
 #[allow(dead_code)]
 /// Implementations of the mixer block.
 impl Mixer {
     /// Create a new mixer block. TODO: Figure out importance of lifetimes
-    pub fn new<'a>(id: u64) -> Mixer {
+    pub fn new() -> Mixer {
         Mixer {
-            id,
-            inputs: Vec::new(),
+            inputs: None,
             output: None,
         }
     }
 
     // TODO: Uncomment once desired base functionality is achieved
-    // /// Execute the mixer block (calculate balances, output streams, etc)
-    // /// This function still needs to be implemented
-    // pub fn execute_block(&mut self) {
+    // /// Execute the mixer block (calculate balances, output streams, etc) /// This function still needs to be implemented pub fn execute_block(&mut self) {
     //     self.outlet_stream = Some(connector::Stream {
     //         s_id: String::from("Mass_Outlet"),
     //         thermo: None,
