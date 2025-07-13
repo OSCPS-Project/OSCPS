@@ -55,41 +55,16 @@ impl ThermodynamicConstants {
     }
 }
 
-///Thermodynamic Packages.
+/// #EOSParams
 ///
-///#MaxwellRelations
-///
-///Will be a common trait for all the thermodynamic packages and will include common functions.
-///Will also enable to user to switch between thermodynamic packages within the StreamThermoState struct
-///
-///The thermodynamic pacakges can be used by the blocks for any relevant calculations
-///
-///For calculations, the thermodynamic packages will call upon the property struct for relevant
-///info.
-///
-///TODO: Currently the rust std::autodiff is still experimental. Need to wait for this release. In
-///the meantime, we will either manually write out the derivatives or use a third party autdiff
-///package (the third party is: https://crates.io/crates/autodiff)
-pub trait MaxwellRelations{
-    ///Calculating the Enthalpy
-    fn enthalpy(&self) -> MolarEnergy;
-    ///Calculating the Entropy
-    fn entropy(&self) -> MolarHeatCapacity;
-    ///Calculate pressure
-    fn pressure(&self) -> Pressure;
-    ///Calculate volume
-    fn volume(&self) -> Volume;
-    ///Calculate temperature
-    fn temperature(&self) -> ThermodynamicTemperature;
-    ///Calculate vapor fractions
-    fn vapor_fraction(&self) -> Ratio;
-    ///Calculate heat capacity
-    fn heat_capacity_const_pressure(&self) -> MolarHeatCapacity;
-    ///Calculate internal temperature
-    fn internal_energy(&self) -> MolarEnergy;
-    ///Calculate gibbs free energy
-    fn gibbs_free_energy(&self) -> Energy;
+/// Enumeration that will hold the single, double, and associating parameters for the different
+/// equation of state packages
+pub enum EOSParams<T> {
+    SingleParameter(T),
+    DoubleParameter(T),
+    AssociatingParameter(T)
 }
+
 
 #[cfg(test)]
 mod thermo_tests {}
