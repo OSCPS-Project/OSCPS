@@ -94,12 +94,6 @@ pub struct ChemicalProperties {
     pub other_properties: Option<Vec<OtherProperty>>,
 }
 
-/// Trait to group all property libraries
-trait PropertyLibrary {
-    /// default function for connecting the database to pull relevant property information
-    fn oscps_db_connection(&self) -> &db_connection;
-}
-
 
 
 #[cfg(test)]
