@@ -11,7 +11,7 @@ extern crate serde;
 extern crate anyhow;
 
 pub mod blocks;
-pub mod component;
+pub mod properties;
 pub mod simulation;
 pub mod stream;
 pub mod thermodynamics;
