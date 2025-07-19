@@ -56,7 +56,7 @@ impl ThermodynamicConstants {
                 Box::new(ThermodynamicTemperature::new::<thermodynamic_temperature::kelvin>(273.15))
             }
             ThermodynamicConstants::StandardPressure => {
-                Box::new(Pressure::new::<pressure::pascal>(101_325.0))
+                Box::new(Pressure::new::<pressure::pascal>(101325.0))
             },
             ThermodynamicConstants::AvogadroNumber => Box::new(6.02214076e23), //Units: particles/mole
             ThermodynamicConstants::BoltzmannConstant => Box::new(HeatCapacity::new::<heat_capacity::joule_per_kelvin>(1.380_649e-23))
