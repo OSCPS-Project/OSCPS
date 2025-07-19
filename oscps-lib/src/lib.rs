@@ -5,13 +5,13 @@
 
 #![warn(missing_docs)]
 
-extern crate uom;
+extern crate anyhow;
 extern crate once_cell;
 extern crate serde;
-extern crate anyhow;
+extern crate uom;
 
 pub mod blocks;
-pub mod component;
+// pub mod component;
 pub mod simulation;
 pub mod stream;
 pub mod thermodynamics;

@@ -2,21 +2,19 @@
 ///
 /// Will provide methods to connect to a postgres database to pull relevant property and/or
 /// simulation information
-/// 
+///
 /// properties:
 /// 1. db_name
 /// 2. query
 /// 3. status
 /// 4. connection_key
-
 use sqlx::PgPool;
 use uuid::Uuid;
-
 
 enum DBStatus {
     Successful,
     Failure,
-    InProgress
+    InProgress,
 }
 
 pub struct PostgresDB {

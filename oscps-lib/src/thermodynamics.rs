@@ -1,21 +1,22 @@
 //! # Thermodynamics
 //!
-//! This module will hold all the functions related to calculating 
+//! This module will hold all the functions related to calculating
 //! themrodynamic properties for the blocks and chemical species.
 
 ///Importing EOSModels
 pub mod eos_models;
 
+use uom::si::amount_of_substance;
+use uom::si::energy;
 /// Importing chemical properties
-use crate::properties::Chemical;
+// use crate::properties::Chemical;
 
 ///Importing External Packages
 use uom::si::f64::*;
+#[allow(unused_imports)]
 use uom::si::mass;
 use uom::si::pressure;
 use uom::si::thermodynamic_temperature;
-use uom::si::energy;
-use uom::si::amount_of_substance;
 
 #[allow(dead_code)]
 /// #ThermodynamicConstants
@@ -26,14 +27,14 @@ pub enum ThermodynamicConstants {
     /// The Universal gas constant in J/(mol*K)
     UniversalGasConstant, // J/(mol*K)
     /// Standard temperature in K
-    StandardTemperature,  // T_0
+    StandardTemperature, // T_0
     /// Standard pressure in Pa
-    StandardPressure,     // P_0
+    StandardPressure, // P_0
     /// Avogadro's number in mol^-1
-    AvogadroNumber,       // N_A
+    AvogadroNumber, // N_A
 }
 
-#[allow(dead_code)] 
+#[allow(dead_code)]
 /// Implements values of thermodynamic constants.
 impl ThermodynamicConstants {
     /// Returns the value of the thermodynamic constant with its appropriate type.
@@ -41,15 +42,19 @@ impl ThermodynamicConstants {
         match self {
             ThermodynamicConstants::UniversalGasConstant => {
                 let r = 8.314462618;
-                let constant = Energy::new::<energy::joule>(r) / (ThermodynamicTemperature::new::<thermodynamic_temperature::kelvin>(1.0)* AmountOfSubstance::new::<amount_of_substance::mole>(1.0));
+                let constant = Energy::new::<energy::joule>(r)
+                    / (ThermodynamicTemperature::new::<thermodynamic_temperature::kelvin>(1.0)
+                        * AmountOfSubstance::new::<amount_of_substance::mole>(1.0));
                 Box::new(constant)
-            },
+            }
             ThermodynamicConstants::StandardTemperature => {
-                Box::new(ThermodynamicTemperature::new::<thermodynamic_temperature::kelvin>(273.15))
+                Box::new(ThermodynamicTemperature::new::<
+                    thermodynamic_temperature::kelvin,
+                >(273.15))
             }
             ThermodynamicConstants::StandardPressure => {
                 Box::new(Pressure::new::<pressure::pascal>(101_325.0))
-            },
+            }
             ThermodynamicConstants::AvogadroNumber => Box::new(6.02214076e23), //Units: particles/mole
         }
     }
@@ -70,7 +75,7 @@ impl ThermodynamicConstants {
 ///TODO: Currently the rust std::autodiff is still experimental. Need to wait for this release. In
 ///the meantime, we will either manually write out the derivatives or use a third party autdiff
 ///package (the third party is: https://crates.io/crates/autodiff)
-pub trait MaxwellRelations{
+pub trait MaxwellRelations {
     ///Calculating the Enthalpy
     fn enthalpy(&self) -> MolarEnergy;
     ///Calculating the Entropy
