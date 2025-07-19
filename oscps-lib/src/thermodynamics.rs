@@ -9,11 +9,14 @@
 pub mod ideal;
 pub mod cubic;
 
-/// Importing chemical properties
+///Importing Supporting Thermodynamic Methods
+
+/// Importing Chemical Properties Used by Thermo Packages
 use crate::properties::Chemical;
 
 ///Importing External Packages
 use uom::si::f64::*;
+use uom::si::heat_capacity;
 use uom::si::mass;
 use uom::si::pressure;
 use uom::si::thermodynamic_temperature;
@@ -34,6 +37,8 @@ pub enum ThermodynamicConstants {
     StandardPressure,     // P_0
     /// Avogadro's number in mol^-1
     AvogadroNumber,       // N_A
+    /// Boltzmann Constant
+    BoltzmannConstant     // k_B
 }
 
 #[allow(dead_code)] 
@@ -54,6 +59,7 @@ impl ThermodynamicConstants {
                 Box::new(Pressure::new::<pressure::pascal>(101_325.0))
             },
             ThermodynamicConstants::AvogadroNumber => Box::new(6.02214076e23), //Units: particles/mole
+            ThermodynamicConstants::BoltzmannConstant => Box::new(HeatCapacity::new::<heat_capacity::joule_per_kelvin>(1.380_649e-23))
         }
     }
 }

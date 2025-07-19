@@ -3,7 +3,21 @@
 //! This will contain the very basic Equation of State Struct
 
 use std::sync::Arc;
+use crate::thermodynamics::EOSParams;
+use crate::thermodynamics::ideal::BaseEOSModel;
+use crate::stream::ComponentData;
 
-pub Struct BaseIdeal {
-    Arc<>
+///# BaseIdeal
+///
+///This is the base thermodynamics package.
+///
+///Will only provide the list of components and it will calculate the 
+///ideal helmholtz free energy.
+pub struct BaseIdeal {
+    ///List of components (coming from 'Stream' struct)
+    pub components: Arc<Vec<ComponentData>>,
+}
+
+impl BaseEOSModel for BaseIdeal{
+
 }

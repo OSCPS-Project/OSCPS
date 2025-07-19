@@ -4,7 +4,7 @@
 // use crate::thermodynamics::StreamThermoState;
 use crate::simulation::BlockReference;
 use crate::properties::Chemical;
-use crate::thermodynamics::ideal::base_ideal_eos::BaseEOSModel;
+use crate::thermodynamics::ideal::BaseEOSModel;
 ///Importing External Packages
 use uom::si::f64::*;
 use uom::si::mass;
