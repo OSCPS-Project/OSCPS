@@ -76,4 +76,4 @@ pub enum EOSParams<T> {
 
 
 #[cfg(test)]
-mod thermo_tests {}
+mod tests_thermo_module {}
