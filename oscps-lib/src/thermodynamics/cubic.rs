@@ -1,5 +1,5 @@
 
-use crate::thermodynamics::*;
+use crate::thermodynamics::ideal::BaseEOSModel;
 
 
 

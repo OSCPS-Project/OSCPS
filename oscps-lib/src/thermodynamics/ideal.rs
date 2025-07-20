@@ -20,6 +20,7 @@ use uom::si::ratio;
 
 //Specific EOS Models using this Trait
 pub mod base_ideal_eos;
+pub mod walkermodel_ideal_eos;
 
 
 ///# BaseEOSModel
@@ -31,19 +32,24 @@ pub mod base_ideal_eos;
 ///energy (as total = resid + ideal). The supporting methods will use these EOS models to then
 ///calculate the specific properties :)
 pub trait BaseEOSModel {
-    /// Computes the total moles for the stream
+    ///Getting the list of component data
+    ///
+    /// # Returns
+    /// Vector with ``ComponentData`` objects
+    fn components (&self) -> Arc<Vec<ComponentData>>;
+    /// Default function that computes the total moles for the stream
     ///
     /// # Returns
     /// The total amount of moles
     fn total_moles(&self) -> AmountOfSubstance {
-        let mut total_moles = 0;
-        let comp_list_ref: &Vec<ComponentData> = &self.components;
-        for substance in comp_list_ref {
-            total_moles += substance.get::<amount_of_substance::mole>();
+        let mut total_moles = 0.0;
+        let comp_list_ref =  self.components();
+        for substance in comp_list_ref.as_ref() {
+            total_moles += substance.molar_quantity.get::<amount_of_substance::mole>();
         }
         return AmountOfSubstance::new::<amount_of_substance::mole>(total_moles);
     }
-    /// Function to calculate the Ideal Helmholtz Energy
+    /// Default function to calculate the Ideal Helmholtz Energy
     /// 
     /// # Arguments
     /// * `V` - The volume (type 'uom Volume')
@@ -52,22 +58,24 @@ pub trait BaseEOSModel {
     /// # Returns
     /// The ideal helmholtz free energy (units of Joules)
     fn ideal_helmholtz(&self, V : Volume, T : ThermodynamicTemperature) -> Energy {
-        let k_b = ThermodynamicConstants::BoltzmannConstant.value().get::<heat_capacity::joule_per_kelvin>();
-        let N = self.total_moles();
-        let T_val = T.get::<thermodynamic_temperature::kelvin>();
-        let V_val = V.get::<thermodynamic_temperature::kelvin>();
-        let mut a_ideal = N*k_b*T_val;
-        let comp_list_ref: &Vec<ComponentData> = &self.components;
-        for substance in comp_list_ref {
-            let substance_molar_quantity = substance.molar_quantity;
+        let k_b = ThermodynamicConstants::BoltzmannConstant.value()
+            .downcast_ref::<HeatCapacity>()  
+            .unwrap()
+            .get::<heat_capacity::joule_per_kelvin>();
+        let N = self.total_moles().get::<amount_of_substance::mole>();
+        let t_val = T.get::<thermodynamic_temperature::kelvin>();
+        let v_val = V.get::<volume::cubic_meter>();
+        let mut a_ideal = N*k_b*t_val;
+        let comp_list_ref =  self.components();
+        for substance in comp_list_ref.as_ref() {
+            let substance_molar_quantity = substance.molar_quantity.get::<amount_of_substance::mole>();
             let x_i = substance_molar_quantity / N;
-            let log_frac = x_i / (V_val*T_val.powf(1.5));
+            let log_frac = x_i / (v_val*t_val.powf(1.5));
             a_ideal += x_i * (log_frac.ln() - 1.0);
         }
 
         return Energy::new::<energy::joule>(a_ideal);
-
-   }
+    }
 }
 
 

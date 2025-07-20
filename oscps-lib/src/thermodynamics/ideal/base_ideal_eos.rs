@@ -4,6 +4,7 @@
 
 use std::sync::Arc;
 use crate::thermodynamics::EOSParams;
+use crate::thermodynamics::ReferenceState;
 use crate::thermodynamics::ideal::BaseEOSModel;
 use crate::stream::ComponentData;
 
@@ -16,9 +17,15 @@ use crate::stream::ComponentData;
 pub struct BaseIdeal {
     ///List of components (coming from 'Stream' struct)
     pub components: Arc<Vec<ComponentData>>,
+    pub reference_state : Arc<ReferenceState> 
 }
 
-//Implementing the `BaseEOSModel` trait for the BasIdeal EOS Package
-impl BaseEOSModel for BaseIdeal{}
+//Implementing the `BaseEOSModel` trait for the BasIdeal EOS Package. This will the default method
+//for calculating the ideal helmholtz free energy.
+impl BaseEOSModel for BaseIdeal{
+    fn components(&self) -> Arc<Vec<ComponentData>> {
+        return Arc::clone(&self.components);
+    }
+}
 
 

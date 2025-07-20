@@ -24,7 +24,7 @@ use uom::si::energy;
 use uom::si::amount_of_substance;
 
 #[allow(dead_code)]
-/// #ThermodynamicConstants
+///# ThermodynamicConstants
 ///
 /// Struct for storing physical constants for thermodynamics.
 /// TODO: Reimplement the use of uom for dimensional analysis.
@@ -73,6 +73,18 @@ pub enum EOSParams<T> {
     DoubleParameter(T),
     AssociatingParameter(T)
 }
+
+///# ReferenceState
+///
+/// Enumeration that will contain the types of reference states that will be used by the different
+/// equation of state models.
+pub enum ReferenceState{}
+
+///# RefEOS
+/// 
+/// Will contain the parameters that will be part of each enum member in the ``ReferenceState``
+/// enumeration.
+pub struct RefEOS{}
 
 
 #[cfg(test)]
