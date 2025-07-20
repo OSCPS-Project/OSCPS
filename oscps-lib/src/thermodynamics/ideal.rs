@@ -26,6 +26,10 @@ pub mod base_ideal_eos;
 ///
 ///This will hold the common methods associated with the ideal thermodynamics 
 ///packages.
+///
+///Note - In general the EOS Models will hold the functions for calculating resid helmholtz free
+///energy (as total = resid + ideal). The supporting methods will use these EOS models to then
+///calculate the specific properties :)
 pub trait BaseEOSModel {
     /// Computes the total moles for the stream
     ///

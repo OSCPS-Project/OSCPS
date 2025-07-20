@@ -18,6 +18,7 @@ pub struct BaseIdeal {
     pub components: Arc<Vec<ComponentData>>,
 }
 
-impl BaseEOSModel for BaseIdeal{
+//Implementing the `BaseEOSModel` trait for the BasIdeal EOS Package
+impl BaseEOSModel for BaseIdeal{}
 
-}
+
