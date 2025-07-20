@@ -28,7 +28,8 @@ pub mod walkermodel_ideal_eos;
 ///This will hold the common methods associated with the ideal thermodynamics 
 ///packages.
 ///
-///Note - In general the EOS Models will hold the functions for calculating resid helmholtz free
+///# Notes
+///In general the EOS Models will hold the functions for calculating resid helmholtz free
 ///energy (as total = resid + ideal). The supporting methods will use these EOS models to then
 ///calculate the specific properties :)
 pub trait BaseEOSModel {
@@ -62,14 +63,14 @@ pub trait BaseEOSModel {
             .downcast_ref::<HeatCapacity>()  
             .unwrap()
             .get::<heat_capacity::joule_per_kelvin>();
-        let N = self.total_moles().get::<amount_of_substance::mole>();
+        let n = self.total_moles().get::<amount_of_substance::mole>();
         let t_val = T.get::<thermodynamic_temperature::kelvin>();
         let v_val = V.get::<volume::cubic_meter>();
-        let mut a_ideal = N*k_b*t_val;
+        let mut a_ideal = n*k_b*t_val;
         let comp_list_ref =  self.components();
         for substance in comp_list_ref.as_ref() {
             let substance_molar_quantity = substance.molar_quantity.get::<amount_of_substance::mole>();
-            let x_i = substance_molar_quantity / N;
+            let x_i = substance_molar_quantity / n;
             let log_frac = x_i / (v_val*t_val.powf(1.5));
             a_ideal += x_i * (log_frac.ln() - 1.0);
         }
