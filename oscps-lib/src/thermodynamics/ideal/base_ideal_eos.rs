@@ -1,6 +1,6 @@
 //! # Base Ideal Equation of State
 //!
-//! This will contain the very basic Equation of State Struct
+//! This will contain the very basic Equation of State Package
 
 use std::sync::Arc;
 use crate::thermodynamics::EOSParams;
