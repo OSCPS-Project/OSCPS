@@ -6,8 +6,10 @@
 //! For example, if a block is a simple mixer, then it will implement the
 //! MassBalance trait but not the EnergyBalance.
 
-use crate::stream::Stream;
+// use crate::stream::Stream;
 use once_cell::sync::Lazy;
+use std::fmt::Debug;
+use std::sync::Arc;
 use uom::si::energy::joule;
 use uom::si::f64::Energy;
 use uom::si::f64::Mass;
@@ -25,18 +27,18 @@ use crate::simulation::StreamReference;
 /// inputs or outputs, offer to automatically insert sources/sinks where the loose
 /// ends are. While these special blocks will still have to implement this trait
 /// (and thus implement unnecessary functions, such as the "connect_input" function
-/// for a souce block, these functions can simply be dummy functions for this special case.
+/// for a source block, these functions can simply be dummy functions for this special case.
 /// For safety, they can throw errors if called, but they should never be used.
-pub trait Block {
+pub trait Block: Debug + Send + Sync {
     /// Connect an input to a block. TODO: Have this function create the input stream and return a
     /// reference to it. Then use that stream reference to connect an output.
-    fn connect_input(&mut self, stream: &mut Stream) -> Result<(), &str>;
+    fn connect_input(&mut self, stream: StreamReference) -> Result<(), &str>;
     /// Disconnect an input to a block
-    fn disconnect_input(&mut self, stream: &mut Stream) -> Result<(), &str>;
+    fn disconnect_input(&mut self, stream: StreamReference) -> Result<(), &str>;
     /// Connect an output to a block
-    fn connect_output(&mut self, stream: &mut Stream) -> Result<(), &str>;
+    fn connect_output(&mut self, stream: StreamReference) -> Result<(), &str>;
     /// Disconnect an output to a block
-    fn disconnect_output(&mut self, stream: &mut Stream) -> Result<(), &str>;
+    fn disconnect_output(&mut self, stream: StreamReference) -> Result<(), &str>;
     // TODO: Add additional functions that all Blocks should implement
 }
 
@@ -45,11 +47,12 @@ pub trait Block {
 /// A Separator block that allows components of a stream to be separated.
 /// Allows for a single input and an arbitrary number of outputs.
 #[allow(dead_code)]
+#[derive(Debug)]
 struct Separator {
     id: u64,
-    input: Option<Stream>, // An option is used in case there is no input stream
-    outputs: Vec<Stream>, // An empty vec can represent no outputs, no need for Option<Vec<Stream>>>
-                          // TODO: Add additional fields that controls how components are separated
+    input: Option<StreamReference>, // An option is used in case there is no input stream
+    outputs: Option<Vec<StreamReference>>, // An empty vec can represent no outputs, no need for Option<Vec<Stream>>>
+                                           // TODO: Add additional fields that controls how components are separated
 }
 
 #[allow(dead_code)]
@@ -58,12 +61,13 @@ impl Separator {
         Separator {
             id,
             input: None,
-            outputs: Vec::new(),
+            outputs: None,
         }
     }
 }
 
 #[allow(dead_code)]
+#[derive(Debug)]
 /// # Mixer
 ///
 /// A block used for simple stream mixing operations. Spacial information
@@ -143,22 +147,168 @@ impl Mixer {
 }
 
 impl Block for Mixer {
-    fn connect_input<'a>(&mut self, _stream: &mut Stream) -> Result<(), &'static str> {
-        // TODO: Figure out how to store references to streams
-        // self.inputs.push(stream);
+    fn connect_input<'a>(&mut self, stream: StreamReference) -> Result<(), &'static str> {
+        match &mut self.inputs {
+            None => {
+                let mut input_vec = Vec::new();
+                input_vec.push(stream);
+                self.inputs = Some(Vec::new());
+            }
+            Some(input_vec) => input_vec.push(stream),
+        }
         Ok(())
     }
 
-    fn disconnect_input(&mut self, _stream: &mut Stream) -> Result<(), &'static str> {
+    fn disconnect_input(&mut self, stream: StreamReference) -> Result<(), &'static str> {
+        match &mut self.inputs {
+            None => {
+                return Err("Input disconnect requested for block with no inputs.");
+            }
+            Some(input_vec) => {
+                let prev_len = input_vec.len();
+                input_vec.retain(|arc| !Arc::ptr_eq(arc, &stream));
+                let curr_len = input_vec.len();
+                if prev_len == curr_len {
+                    return Err("Attempted disconnect of input not present on Mixer.");
+                }
+            }
+        }
         Ok(())
     }
 
-    fn connect_output(&mut self, _stream: &mut Stream) -> Result<(), &'static str> {
+    fn connect_output(&mut self, stream: StreamReference) -> Result<(), &'static str> {
+        match &mut self.output {
+            None => {
+                self.output = Some(stream);
+                Ok(())
+            }
+            Some(_) => Err("Attempted to connect output on Mixer with existing output."),
+        }
+    }
+
+    fn disconnect_output(&mut self, _stream: StreamReference) -> Result<(), &'static str> {
+        match &mut self.output {
+            None => Err("Attempted disconnect on Mixer with no output."),
+            Some(_) => {
+                self.output = None;
+                Ok(())
+            }
+        }
+    }
+}
+
+#[allow(dead_code)]
+#[derive(Debug)]
+/// # Source
+///
+/// A block used to introduce materials into the simulation.
+pub struct Source {
+    /// Outlet stream for the mixer block
+    pub output: Option<StreamReference>,
+}
+
+#[allow(dead_code)]
+/// Implementations of the source
+impl Source {
+    /// Create a new source block.
+    pub fn new() -> Source {
+        Source { output: None }
+    }
+
+    /// Create a new source block.
+    pub fn with_output(output: StreamReference) -> Source {
+        Source {
+            output: Some(output),
+        }
+    }
+}
+
+impl Block for Source {
+    fn connect_input<'a>(&mut self, _stream: StreamReference) -> Result<(), &'static str> {
+        Err("Attempted input connection for Source block. Source does not have inputs.")
+    }
+
+    fn disconnect_input(&mut self, _stream: StreamReference) -> Result<(), &'static str> {
+        Err("Attempted input disconnect for Source block. Source does not have inputs.")
+    }
+
+    fn connect_output(&mut self, stream: StreamReference) -> Result<(), &'static str> {
+        match &mut self.output {
+            None => {
+                self.output = Some(stream);
+                Ok(())
+            }
+            Some(_) => Err("Attempted to connect output on Mixer with existing output."),
+        }
+    }
+
+    fn disconnect_output(&mut self, _stream: StreamReference) -> Result<(), &'static str> {
+        match &mut self.output {
+            None => Err("Attempted disconnect on Mixer with no output."),
+            Some(_) => {
+                self.output = None;
+                Ok(())
+            }
+        }
+    }
+}
+
+#[allow(dead_code)]
+#[derive(Debug)]
+/// # Sink
+///
+/// A block for removing materials from a simulation.
+pub struct Sink {
+    /// Inlet stream for the mixer block
+    pub inputs: Option<Vec<StreamReference>>,
+}
+
+#[allow(dead_code)]
+/// Implementations of the source
+impl Sink {
+    /// Create a new source block.
+    pub fn new() -> Sink {
+        Sink { inputs: None }
+    }
+}
+
+impl Block for Sink {
+    fn connect_input<'a>(&mut self, stream: StreamReference) -> Result<(), &'static str> {
+        match &mut self.inputs {
+            None => {
+                let mut input_vec = Vec::new();
+                input_vec.push(stream);
+                self.inputs = Some(Vec::new());
+            }
+            Some(input_vec) => input_vec.push(stream),
+        }
         Ok(())
     }
 
-    fn disconnect_output(&mut self, _stream: &mut Stream) -> Result<(), &'static str> {
+    fn disconnect_input(&mut self, stream: StreamReference) -> Result<(), &'static str> {
+        match &mut self.inputs {
+            None => {
+                return Err("Input disconnect requested for Sink with no inputs.");
+            }
+            Some(input_vec) => {
+                let prev_len = input_vec.len();
+                input_vec.retain(|arc| !Arc::ptr_eq(arc, &stream));
+                let curr_len = input_vec.len();
+                // If the length does not change, nothing was removed.
+                if prev_len == curr_len {
+                    return Err("Attempted disconnect of input not present on Mixer.");
+                }
+            }
+        }
         Ok(())
+    }
+
+    fn connect_output(&mut self, _stream: StreamReference) -> Result<(), &'static str> {
+        Err("Attempted output connection for Sink block. Sink does not have outputs.")
+    }
+
+    fn disconnect_output(&mut self, _stream: StreamReference) -> Result<(), &'static str> {
+        Err("Attempted output disconnect for Sink block. Sink does not have outputs.")
     }
 }
 

@@ -3,7 +3,8 @@ use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::path::Builder;
 use iced::widget::canvas::{self, Canvas, Frame, Geometry, Path, Stroke};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Theme};
-use oscps_lib::simulation::Simulation;
+use oscps_lib::simulation::{BlockReference, Simulation};
+use std::sync::Arc;
 
 use std::time::{Duration, SystemTime};
 
@@ -38,25 +39,106 @@ impl State {
     }
 }
 
-#[derive(Display, Debug, Clone, Copy, PartialEq)]
+#[derive(Display, Debug, Clone)]
 pub enum Component {
     Connector {
         from: Option<Point>,
         to: Option<Point>,
+        from_block: Option<BlockReference>,
+        to_block: Option<BlockReference>,
     },
     Mixer {
         at: Option<Point>,
         input: Option<Point>,
         output: Option<Point>,
+        block: Option<BlockReference>,
     },
     Source {
         at: Option<Point>,
         output: Option<Point>,
+        block: Option<BlockReference>,
     },
     Sink {
         at: Option<Point>,
         input: Option<Point>,
+        block: Option<BlockReference>,
     },
+}
+fn block_refs_equal(block1: &Option<BlockReference>, block2: &Option<BlockReference>) -> bool {
+    match (block1, block2) {
+        (None, None) => true,
+        (Some(b1), Some(b2)) => Arc::ptr_eq(b1, b2),
+        _ => false,
+    }
+}
+impl PartialEq for Component {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (
+                Component::Connector {
+                    from: from1,
+                    to: to1,
+                    from_block: from_block1,
+                    to_block: to_block1,
+                },
+                Component::Connector {
+                    from: from2,
+                    to: to2,
+                    from_block: from_block2,
+                    to_block: to_block2,
+                },
+            ) => {
+                from1 == from2
+                    && to1 == to2
+                    && block_refs_equal(from_block1, from_block2)
+                    && block_refs_equal(to_block1, to_block2)
+            }
+            (
+                Component::Mixer {
+                    at: at1,
+                    input: input1,
+                    output: output1,
+                    block: block1,
+                },
+                Component::Mixer {
+                    at: at2,
+                    input: input2,
+                    output: output2,
+                    block: block2,
+                },
+            ) => {
+                at1 == at2
+                    && input1 == input2
+                    && output1 == output2
+                    && block_refs_equal(block1, block2)
+            }
+            (
+                Component::Source {
+                    at: at1,
+                    output: output1,
+                    block: block1,
+                },
+                Component::Source {
+                    at: at2,
+                    output: output2,
+                    block: block2,
+                },
+            ) => at1 == at2 && output1 == output2 && block_refs_equal(block1, block2),
+            (
+                Component::Sink {
+                    at: at1,
+                    input: input1,
+                    block: block1,
+                },
+                Component::Sink {
+                    at: at2,
+                    input: input2,
+                    block: block2,
+                },
+            ) => at1 == at2 && input1 == input2 && block_refs_equal(block1, block2),
+            _ => false,
+        }
+    }
 }
 
 impl Component {
@@ -64,6 +146,8 @@ impl Component {
         Component::Connector {
             from: None,
             to: None,
+            from_block: None,
+            to_block: None,
         }
     }
 
@@ -71,12 +155,14 @@ impl Component {
         Component::Source {
             at: None,
             output: None,
+            block: None,
         }
     }
     pub fn sink() -> Self {
         Component::Sink {
             at: None,
             input: None,
+            block: None,
         }
     }
     pub fn mixer() -> Self {
@@ -84,6 +170,7 @@ impl Component {
             at: None,
             input: None,
             output: None,
+            block: None,
         }
     }
 
@@ -156,26 +243,28 @@ impl Component {
         let components = Path::new(|p| {
             for component in components {
                 match component {
-                    Component::Connector { from, to } => {
+                    Component::Connector { from, to, .. } => {
                         let from = from.expect(&expect_string);
                         let to = to.expect(&expect_string);
 
                         Component::draw_connector(p, to, from)
                     }
-                    Component::Mixer { at, input, output } => {
+                    Component::Mixer {
+                        at, input, output, ..
+                    } => {
                         let at = at.expect(&expect_string);
                         let input = input.expect(&expect_string);
                         let output = output.expect(&expect_string);
 
                         Component::draw_mixer(p, at, input, output)
                     }
-                    Component::Source { at, output } => {
+                    Component::Source { at, output, .. } => {
                         let at = at.expect(&expect_string);
                         let output = output.expect(&expect_string);
 
                         Component::draw_source(p, at, output)
                     }
-                    Component::Sink { at, input } => {
+                    Component::Sink { at, input, .. } => {
                         let at = at.expect(&expect_string);
                         let input = input.expect(&expect_string);
 
@@ -256,6 +345,8 @@ impl Default for Component {
         Component::Connector {
             from: None,
             to: None,
+            from_block: None,
+            to_block: None,
         }
     }
 }
@@ -277,6 +368,7 @@ impl<'a> Flowsheet<'a> {
         Some(Component::Sink {
             at: Some(cursor_position),
             input: Some(input),
+            block: None,
         })
     }
 
@@ -289,6 +381,7 @@ impl<'a> Flowsheet<'a> {
         Some(Component::Source {
             at: Some(cursor_position),
             output: Some(output),
+            block: None,
         })
     }
 
@@ -304,6 +397,7 @@ impl<'a> Flowsheet<'a> {
             at: Some(cursor_position),
             input: Some(input),
             output: Some(output),
+            block: None,
         })
     }
 
@@ -346,6 +440,8 @@ impl<'a> Flowsheet<'a> {
                 let mut result = Some(Component::Connector {
                     from: Some(from),
                     to: Some(cursor_position),
+                    from_block: None, // TODO: Implement properly
+                    to_block: None,
                 });
                 for component in self.components {
                     if !matches!(component, Component::Connector { .. })
@@ -356,6 +452,8 @@ impl<'a> Flowsheet<'a> {
                             from: Some(from),
                             // NOTE: Should be safe, on_input() returned true.
                             to: Some(component.get_input().unwrap()),
+                            from_block: None,
+                            to_block: None, // TODO: Implement properly
                         });
                         *state = None;
                         return result;

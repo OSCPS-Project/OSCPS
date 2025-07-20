@@ -43,7 +43,7 @@ struct MainWindow {
     simulation: Simulation,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 enum Message {
     AddedComponent(flowsheet::Component),
     Clear,
@@ -76,19 +76,18 @@ impl MainWindow {
         match message {
             Message::AddedComponent(component) => {
                 info!("Added component");
-                self.components.push(component);
                 self.flowsheet.request_redraw();
                 match component {
-                    flowsheet::Component::Source{ ..}  => todo!(),
+                    flowsheet::Component::Source{at: _, output: _, block: _}  => {
+                        self.simulation.add_block(simulation::BlockType::Mixer);
+                    },
+                    flowsheet::Component::Connector{ ..}  => todo!(),
                     flowsheet::Component::Sink{ ..} => todo!(),
                     flowsheet::Component::Mixer{ ..} => {
                         self.simulation.add_block(simulation::BlockType::Mixer);
                     },
-                    flowsheet::Component::Connector{ .. } => { 
-                        // self.simulation.add_stream(simulation::BlockType::Mixer);
-                        todo!();
-                    },
                 }
+                self.components.push(component);
             }
             // TODO: Make the clear option more deliberate (2 clicks at least)
             Message::Clear => {
@@ -142,10 +141,10 @@ impl MainWindow {
     ) -> impl Into<Element<'a, Message>> {
         container(
             button(container(column![
-                Icon::new(target_mode),
+                Icon::new(target_mode.clone()),
                 text(target_mode.to_string())
             ]))
-            .style(match self.flowsheet.placement_mode {
+            .style(match self.flowsheet.placement_mode.clone() {
                 mode if mode == target_mode => button::danger,
                 _ => button::secondary,
             })

@@ -7,6 +7,7 @@ use crate::simulation::BlockReference;
 /// # Stream
 ///
 /// Struct to hold stream information
+#[derive(Debug)]
 pub struct Stream {
     /// Instance of ThermoState struct that holds thermodynamic information.
     // pub thermo: Option<ThermoState>, // HACK: Temporarily disable to enable thread-safety.

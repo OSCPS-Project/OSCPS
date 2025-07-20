@@ -2,13 +2,15 @@
 //!
 //! Allows for the construction of a simulation object. TODO: Implement this.
 
-use crate::blocks::{Block, Mixer};
+use crate::blocks::{Block, Mixer, Sink, Source};
 use crate::stream::Stream;
+
 // use std::collections::HashMap;
 use std::collections::BTreeMap;
 use std::sync::{Arc, RwLock};
 /// An Arc, RwLock, Box reference for threadsafe Block interactions.
 pub type BlockReference = Arc<RwLock<Box<dyn Block + Send + Sync>>>;
+
 /// An Arc, RwLock, Box reference for threadsafe Stream interactions.
 pub type StreamReference = Arc<RwLock<Box<Stream>>>;
 
@@ -93,10 +95,10 @@ impl Simulation {
         }
     }
 
-    /// Adds a block to the simulation and returns the ID of
+    /// Adds a block to the simulation and returns a reference to the block
     /// the block.
     #[allow(dead_code)]
-    pub fn add_block(&mut self, block: BlockType) -> u64 {
+    pub fn add_block(&mut self, block: BlockType) -> Option<u64> {
         // Start with a block id of 1.
         let mut id = 1;
         while self.blocks.contains_key(&id) {
@@ -109,14 +111,15 @@ impl Simulation {
                     .insert(id, Arc::new(RwLock::new(Box::new(Mixer::new()))));
             }
             BlockType::Source => {
-                todo!()
+                self.blocks
+                    .insert(id, Arc::new(RwLock::new(Box::new(Source::new()))));
             }
             BlockType::Sink => {
-                todo!()
+                self.blocks
+                    .insert(id, Arc::new(RwLock::new(Box::new(Sink::new()))));
             }
         }
-
-        return id;
+        return Some(id);
     }
 
     /// Adds a stream to the simulation and returns the ID of
@@ -133,18 +136,21 @@ impl Simulation {
         return id;
     }
 
-    // /// Add a block to the simulation.
-    // fn add_block(
-    //     &mut self,
-    //     block_id: u64,
-    //     block: Arc<RwLock<Box<dyn Block + Send>>>,
-    // ) -> Result<(), Err> {
-    //     if self.blocks.contains_key(&block_id) {
-    //         return Err(Err::BlockExists);
-    //     }
-    //     self.blocks.insert(block_id, block);
-    //     Ok(())
-    // }
+    /// Fetch a block using an id.
+    pub fn get_block(&self, id: u64) -> Option<BlockReference> {
+        match self.blocks.get(&id) {
+            Some(block) => Some(block.clone()),
+            None => None,
+        }
+    }
+
+    /// Fetch a stream using an id.
+    pub fn get_stream(&self, id: u64) -> Option<StreamReference> {
+        match self.streams.get(&id) {
+            Some(stream) => Some(stream.clone()),
+            None => None,
+        }
+    }
 
     //     pub fn add_connector(&mut self, connector_id: u64, connector: Connector) -> Result<(), Err> {
     //         if self.connectors.contains_key(&connector_id) {
