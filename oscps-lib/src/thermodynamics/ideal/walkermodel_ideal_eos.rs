@@ -72,4 +72,11 @@ impl BaseEOSModel for WalkerModel {
     }
 }
 
+impl WalkerModel {
+    //Constructor for the Walker Model
+    pub fn new(species : Arc<Vec<ComponentData>>, ) -> Self {
+        return WalkerModel { components: (), molecular_weight: (), n_rot: (), theta_1: (), theta_2: (), theta_3: (), theta_4: (), deg_1: (), deg_2: (), deg_3: (), deg_4: (), reference_state: () };
+    }
+}
+
 
