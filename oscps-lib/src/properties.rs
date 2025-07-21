@@ -60,7 +60,7 @@ impl Chemical {
 
         // let cid_vec = pubchem_chemical_object.cids().unwrap();
         let cid: i32 = cid_vec.unwrap()[0];
-        let prop = ChemicalProperties::new(cid).unwrap();
+        let prop = ChemicalProperties::new(cid);
         Ok(Chemical {
             pubchem_obj: pubchem_chemical_object,
             properties: prop,
@@ -91,8 +91,23 @@ pub struct ChemicalProperties {
     
     /// Additional chemical property categories
         // Here we might add properties related to binary interactions, etc...
-    pub other_properties: Option<Vec<OtherProperty>>,
+    pub other_properties: Option<Vec<SpecialProperties>>,
 }
+
+impl ChemicalProperties{
+    /// constructor for the ``ChemicalProperties`` struct
+    pub fn new(_cid: i32) -> ChemicalProperties {
+        return ChemicalProperties { critical: None, heat_capacity: None, transport: None, other_properties: None};
+    }
+}
+
+pub struct CriticalProperties {}
+
+pub struct HeatCapacityCoefficients {}
+
+pub struct TransportProperties {}
+
+pub struct SpecialProperties {}
 
 
 
