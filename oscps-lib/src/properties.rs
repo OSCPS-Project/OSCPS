@@ -2,11 +2,11 @@
 //!
 //! Contains chemical properties for species in the simulation.
 
-extern crate uom;
-extern crate pubchem;
-///Importing pure species properties
+//Importing pure species properties
 pub mod pure_species_properties;
 
+extern crate uom;
+extern crate pubchem;
 use anyhow::Result;
 use uom::si::f64::*;
 use std::{thread,time::Duration};
