@@ -31,7 +31,7 @@ pub struct WalkerModel {
     /// Overall Molecular weight (SingleParameter)
     pub molecular_weight : Arc<EOSParams<f64>>,
     /// Nrot - param for Walker model(SingleParameter)
-    pub n_rot : Arc<EOSParams<i64>>, 
+    pub n_rot : Arc<EOSParams<f64>>, 
     /// θ1 - param for Walker model(SingleParameter)
     pub theta_1 : Arc<EOSParams<f64>>, 
     /// θ2 - param for Walker model(SingleParameter)
@@ -73,9 +73,28 @@ impl BaseEOSModel for WalkerModel {
 }
 
 impl WalkerModel {
-    //Constructor for the Walker Model
-    pub fn new(species : Arc<Vec<ComponentData>>, ) -> Self {
-        return WalkerModel { components: (), molecular_weight: (), n_rot: (), theta_1: (), theta_2: (), theta_3: (), theta_4: (), deg_1: (), deg_2: (), deg_3: (), deg_4: (), reference_state: () };
+    ///Constructor for the Walker Model
+    pub fn new(
+        species : Arc<Vec<ComponentData>>, 
+        molec_weight : Arc<EOSParams<f64>>, 
+        n_rot : Arc<EOSParams<f64>>, 
+        theta_values : Arc<Vec<EOSParams<f64>>>, 
+        deg_values : Arc<Vec<EOSParams<f64>>>, 
+        reference_state : Arc<ReferenceState>) 
+        -> Self {
+        return WalkerModel { 
+            components: species, 
+            molecular_weight: molec_weight, 
+            n_rot: n_rot, 
+            theta_1: Arc::new(theta_values[0]), 
+            theta_2: Arc::new(theta_values[1]), 
+            theta_3: Arc::new(theta_values[2]), 
+            theta_4: Arc::new(theta_values[3]), 
+            deg_1: Arc::new(deg_values[0]), 
+            deg_2: Arc::new(deg_values[1]), 
+            deg_3: Arc::new(deg_values[2]), 
+            deg_4: Arc::new(deg_values[3]), 
+            reference_state: reference_state };
     }
 }
 

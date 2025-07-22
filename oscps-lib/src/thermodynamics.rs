@@ -68,11 +68,13 @@ impl ThermodynamicConstants {
 ///
 /// Enumeration that will hold the single, double, and associating parameters for the different
 /// equation of state packages
+#[derive(Clone, Copy)]
 pub enum EOSParams<T> {
     SingleParameter(T),
     DoubleParameter(T),
     AssociatingParameter(T)
 }
+
 
 ///# ReferenceState
 ///
