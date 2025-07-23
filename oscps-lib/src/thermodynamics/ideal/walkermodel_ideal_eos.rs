@@ -63,8 +63,6 @@ impl BaseEOSModel for WalkerModel {
     fn ideal_helmholtz(&self, V: Volume, T: ThermodynamicTemperature) -> Energy {
         let rotational_modes = vec![self.theta_1.as_ref(), self.theta_2.as_ref(), self.theta_3.as_ref(), self.theta_4.as_ref()];
         let vibrational_modes = vec![self.deg_1.as_ref(), self.deg_2.as_ref(), self.deg_3.as_ref(), self.deg_4.as_ref()];
-
-
         let a_ideal = 0.0;
 
 
