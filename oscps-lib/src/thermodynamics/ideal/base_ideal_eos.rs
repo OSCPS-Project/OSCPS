@@ -28,4 +28,19 @@ impl BaseEOSModel for BaseIdeal{
     }
 }
 
-
+impl BaseIdeal {
+    /// Constructor for the ``BaseIdeal`` struct
+    ///
+    /// # Arguments
+    /// * species - The list of species
+    /// * reference_state - the reference state for thermo calcs
+    ///
+    /// # Returns
+    /// The ``BaseIdeal`` object 
+    pub fn new(
+        species : Arc<Vec<ComponentData>>, 
+        reference_state : Arc<ReferenceState>) 
+        -> Self {
+            BaseIdeal { components: species, reference_state: reference_state }
+    }
+}
