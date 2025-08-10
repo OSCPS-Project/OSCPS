@@ -13,4 +13,5 @@ serde_json = "1.0"
 tokio = { version = "1", features = ["full"] }
 anyhow = "1.0"
 autodiff = "0.7.0"
+nalgebra = "0.32"
 oscps-db = { path = "../oscps-db" }

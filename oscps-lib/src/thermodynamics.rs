@@ -13,8 +13,10 @@ pub mod cubic;
 
 /// Importing Chemical Properties Used by Thermo Packages
 use crate::properties::Chemical;
+use crate::stream::ComponentData;
 
 ///Importing External Packages
+use std::sync::Arc;
 use uom::si::f64::*;
 use uom::si::heat_capacity;
 use uom::si::mass;
@@ -22,6 +24,7 @@ use uom::si::pressure;
 use uom::si::thermodynamic_temperature;
 use uom::si::energy;
 use uom::si::amount_of_substance;
+use nalgebra::DMatrix;
 
 #[allow(dead_code)]
 ///# ThermodynamicConstants
@@ -64,7 +67,7 @@ impl ThermodynamicConstants {
     }
 }
 
-/// #EOSParams
+///# EOSParams
 ///
 /// Enumeration that will hold the single, double, and associating parameters for the different
 /// equation of state packages
@@ -82,11 +85,39 @@ pub enum EOSParams<T> {
 /// equation of state models.
 pub enum ReferenceState{}
 
-///# RefEOS
+
+///# ReferenceStateParams
 /// 
 /// Will contain the parameters that will be part of each enum member in the ``ReferenceState``
 /// enumeration.
-pub struct RefEOS{}
+pub struct ReferenceStateParams{}
+
+
+///# EOSGroupTypes
+///
+/// Enumeration to hold the type of groups used within ``EOSGroups``
+pub enum EOSGroupTypes{}
+
+///# EOSGroups
+///
+/// Contain struct definition for Group Contributions. Specifically, this struct will perform
+/// calculations to study properties of groups (such as CH2, CH3, etc within a long-chain
+/// hydrocarbon) and the interactions between groups
+///
+/// Derived from ClapeyronThermo (GroupParams.jl)
+///
+pub struct EOSGroups {
+    pub components : Arc<ComponentData>,
+    pub molecular_weight : Arc<EOSParams<MolarMass>>,
+    pub groups : Arc<Vec<Vec<String>>>,
+    pub n_groups : Arc<Vec<Vec<i64>>>,
+    pub n_intergroups : Arc<Vec<DMatrix<i64>>>,
+    pub i_groups : Arc<Vec<Vec<i64>>>,
+    pub flattened_groups : Arc<Vec<String>>,
+    pub n_flattened_groups : Arc<Vec<Vec<String>>>,
+    pub sourcecsvs : Arc<Vec<String>>
+
+}
 
 
 #[cfg(test)]

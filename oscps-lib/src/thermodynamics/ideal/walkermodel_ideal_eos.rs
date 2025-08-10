@@ -14,11 +14,13 @@ use uom::si::energy;
 use uom::si::amount_of_substance;
 use uom::si::volume;
 use uom::si::ratio;
+use uom::si::molar_mass;
 
 //Internal Imports
 use crate::thermodynamics::EOSParams;
 use crate::thermodynamics::ReferenceState;
 use crate::thermodynamics::ideal::BaseEOSModel;
+use crate::thermodynamics::EOSGroups;
 use crate::stream::ComponentData;
 
 ///# WalkerModel
@@ -29,7 +31,7 @@ pub struct WalkerModel {
     ///List of components (coming from 'Stream' struct)
     pub components: Arc<Vec<ComponentData>>,
     /// Overall Molecular weight (SingleParameter)
-    pub molecular_weight : Arc<EOSParams<f64>>,
+    pub molecular_weight : Arc<EOSParams<MolarMass>>,
     /// Nrot - param for Walker model(SingleParameter)
     pub n_rot : Arc<EOSParams<f64>>, 
     /// θ1 - param for Walker model(SingleParameter)
@@ -49,7 +51,9 @@ pub struct WalkerModel {
     /// deg4 - param for Walker model(SingleParameter)
     pub deg_4 : Arc<EOSParams<f64>>,
     /// reference state for the EOS model
-    pub reference_state : Arc<ReferenceState> 
+    pub reference_state : Arc<ReferenceState>,
+    /// group contributions
+    pub eos_groups : Arc<EOSGroups>
 
 }
 
@@ -64,7 +68,7 @@ impl BaseEOSModel for WalkerModel {
         let rotational_modes = vec![self.theta_1.as_ref(), self.theta_2.as_ref(), self.theta_3.as_ref(), self.theta_4.as_ref()];
         let vibrational_modes = vec![self.deg_1.as_ref(), self.deg_2.as_ref(), self.deg_3.as_ref(), self.deg_4.as_ref()];
         let a_ideal = 0.0;
-
+        
 
         return Energy::new::<energy::joule>(a_ideal);
     }
@@ -83,11 +87,12 @@ impl WalkerModel {
     /// Instance of the ``WalkerModel`` struct
     pub fn new(
         species : Arc<Vec<ComponentData>>, 
-        molec_weight : Arc<EOSParams<f64>>, 
+        molec_weight : Arc<EOSParams<MolarMass>>, 
         n_rot : Arc<EOSParams<f64>>, 
         theta_values : Arc<Vec<EOSParams<f64>>>, 
         deg_values : Arc<Vec<EOSParams<f64>>>, 
-        reference_state : Arc<ReferenceState>) 
+        reference_state : Arc<ReferenceState>,
+        eos_groups : Arc<EOSGroups>)
         -> Self {
             return WalkerModel { 
                 components: species, 
@@ -101,7 +106,8 @@ impl WalkerModel {
                 deg_2: Arc::new(deg_values[1]), 
                 deg_3: Arc::new(deg_values[2]), 
                 deg_4: Arc::new(deg_values[3]), 
-                reference_state: reference_state };
+                reference_state: reference_state,
+                eos_groups: eos_groups };
     }
 }
 
