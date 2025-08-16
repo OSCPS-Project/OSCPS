@@ -5,12 +5,12 @@
 
 Developing a dynamic & steady-state chemical process simulator using a Rust-based backend and frontend. This project aims to create a much better version of ASPEN that will also be open-sourced.
 
-## Authors
+## Primary Developers
 
-- Bhargav Akula
-- Nathaniel Thomas
+- [Bhargav Akula](https://github.com/bhargavakula01)
+- [Nathaniel Thomas](https://github.com/At11011)
 
-## Papers that have helped us with the project
+## Journal Papers that have helped us with the project
 
 [1] P. J. Walker, H.-W. Yew, and A. Riedemann, "Clapeyron.jl: An Extensible, Open-Source Fluid Thermodynamics Toolkit," *Ind. Eng. Chem. Res.*, vol. XX, no. XX, pp. XX–XX, 2022. doi: 10.1021/acs.iecr.2c00326. [Online]. Available: https://pubs.acs.org/doi/10.1021/acs.iecr.2c00326
 
