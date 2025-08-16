@@ -10,4 +10,7 @@ Developing a dynamic & steady-state chemical process simulator using a Rust-base
 - Bhargav Akula
 - Nathaniel Thomas
 
+## Papers that have helped us with the project
+
+[1] P. J. Walker, H.-W. Yew, and A. Riedemann, "Clapeyron.jl: An Extensible, Open-Source Fluid Thermodynamics Toolkit," *Ind. Eng. Chem. Res.*, vol. XX, no. XX, pp. XX–XX, 2022. doi: 10.1021/acs.iecr.2c00326. [Online]. Available: https://pubs.acs.org/doi/10.1021/acs.iecr.2c00326
 
