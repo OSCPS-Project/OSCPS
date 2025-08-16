@@ -78,13 +78,11 @@ pub enum EOSParams<T> {
     AssociatingParameter(T)
 }
 
-
 ///# ReferenceState
 ///
 /// Enumeration that will contain the types of reference states that will be used by the different
 /// equation of state models.
 pub enum ReferenceState{}
-
 
 ///# ReferenceStateParams
 /// 
@@ -92,23 +90,24 @@ pub enum ReferenceState{}
 /// enumeration.
 pub struct ReferenceStateParams{}
 
-
-///# EOSGroupTypes
+///# EOSGroupContributionTypes
 ///
-/// Enumeration to hold the type of groups used within ``EOSGroups``
-pub enum EOSGroupTypes{}
+/// Enumeration to hold the type of groups used within ``EOSGroupContributionParameters``
+pub enum EOSGroupContributionTypes{}
 
 ///# EOSGroups
 ///
 /// Contain struct definition for Group Contributions. Specifically, this struct will perform
 /// calculations to study properties of groups (such as CH2, CH3, etc within a long-chain
-/// hydrocarbon) and the interactions between groups
+/// hydrocarbon) and the interactions between groups.
+///
+/// This can be used to estimate thermodynamic properties using a molecule's functional groups.
 ///
 /// Derived from ClapeyronThermo (GroupParams.jl)
 ///
-pub struct EOSGroups {
-    pub components : Arc<ComponentData>,
-    pub molecular_weight : Arc<EOSParams<MolarMass>>,
+pub struct EOSGroupContributionParameters {
+    pub group_type : Arc<EOSGroupContributionTypes>,
+    pub components : Arc<Vec<ComponentData>>,
     pub groups : Arc<Vec<Vec<String>>>,
     pub n_groups : Arc<Vec<Vec<i64>>>,
     pub n_intergroups : Arc<Vec<DMatrix<i64>>>,
@@ -116,7 +115,23 @@ pub struct EOSGroups {
     pub flattened_groups : Arc<Vec<String>>,
     pub n_flattened_groups : Arc<Vec<Vec<String>>>,
     pub sourcecsvs : Arc<Vec<String>>
+}
 
+impl EOSGroupContributionParameters {
+    ///Constructor for ``EOSGroups``
+    pub fn new(
+        group_type : Arc<EOSGroupContributionTypes>,
+        components : Arc<Vec<ComponentData>>,
+        raw_groups : Arc<Vec<Vec<String>>>,
+        sourcecsvs : Arc<Vec<String>>
+        intragroups : Option<Arc<Vec<String>>>
+    ) ->Self {
+
+    }
+    /// Retrieving intramolecular group interactions for thermo property calcs
+    fn compute_intramolecular_gc(&mut self) {
+
+    }
 }
 
 
