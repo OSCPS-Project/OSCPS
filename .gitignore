@@ -1,1 +1,4 @@
 /target
+.DS_Store
+oscps-gui/bun.lockb
+Cargo.lock
