@@ -123,10 +123,10 @@ impl EOSGroupContributionParameters {
         group_type : Arc<EOSGroupContributionTypes>,
         components : Arc<Vec<ComponentData>>,
         raw_groups : Arc<Vec<Vec<String>>>,
-        sourcecsvs : Arc<Vec<String>>
+        sourcecsvs : Arc<Vec<String>>,
         intragroups : Option<Arc<Vec<String>>>
     ) ->Self {
-
+        
     }
     /// Retrieving intramolecular group interactions for thermo property calcs
     fn compute_intramolecular_gc(&mut self) {
