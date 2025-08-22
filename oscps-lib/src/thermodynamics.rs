@@ -118,7 +118,7 @@ pub struct EOSGroupContributionParameters {
 }
 
 impl EOSGroupContributionParameters {
-    ///Constructor for ``EOSGroups``
+    ///Constructor for ``EOSGroupsContributionParameters``
     pub fn new(
         group_type : Arc<EOSGroupContributionTypes>,
         components : Arc<Vec<ComponentData>>,
