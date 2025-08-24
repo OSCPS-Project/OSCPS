@@ -73,10 +73,34 @@ impl ThermodynamicConstants {
 /// Enumeration that will hold the single, double, and associating parameters for the different
 /// equation of state packages
 #[derive(Clone, Copy)]
-pub enum EOSParams<T> {
-    SingleParameter(T),
-    DoubleParameter(T),
-    AssociatingParameter(T)
+pub enum EOSParams {
+    SingleParameterType(SingleParameter),
+    BinaryParameterType(BinaryParameter),
+    AssociatingParameterType(AssociatingParameter)
+}
+
+///# SingleParameter
+///
+///Pure component thermodynamic properties
+#[derive(Clone, Copy)]
+pub struct SingleParameter {
+
+}
+
+///# BinaryParameter
+///
+///Thermodynamic properties for binary interactions
+#[derive(Clone, Copy)]
+pub struct BinaryParameter {
+
+}
+
+///# AssociatingParameter
+///
+///Thermodynamic properties for associating interactions
+#[derive(Clone, Copy)]
+pub struct AssociatingParameter {
+
 }
 
 ///# ReferenceState
@@ -147,8 +171,8 @@ impl EOSGroupContributionParameters {
         };
     }
     /// Retrieving intramolecular group interactions for thermo property calcs
-    fn compute_intramolecular_gc(&mut self) {
-
+    pub fn compute_intramolecular_gc(&mut self) {
+        
     }
 }
 
