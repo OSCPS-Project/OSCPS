@@ -20,7 +20,7 @@ use uom::si::molar_mass;
 use crate::thermodynamics::EOSParams;
 use crate::thermodynamics::ReferenceState;
 use crate::thermodynamics::ideal::BaseEOSModel;
-use crate::thermodynamics::EOSGroups;
+use crate::thermodynamics::EOSGroupContributionParameters;
 use crate::stream::ComponentData;
 
 ///# WalkerModel
@@ -31,25 +31,25 @@ pub struct WalkerModel {
     ///List of components (coming from 'Stream' struct)
     pub components: Arc<Vec<ComponentData>>,
     /// Overall Molecular weight (SingleParameter)
-    pub molecular_weight : Arc<EOSParams<MolarMass>>,
+    pub molecular_weight : Arc<EOSParams>,
     /// Nrot - param for Walker model(SingleParameter)
-    pub n_rot : Arc<EOSParams<f64>>, 
+    pub n_rot : Arc<EOSParams>, 
     /// θ1 - param for Walker model(SingleParameter)
-    pub theta_1 : Arc<EOSParams<f64>>, 
+    pub theta_1 : Arc<EOSParams>, 
     /// θ2 - param for Walker model(SingleParameter)
-    pub theta_2 : Arc<EOSParams<f64>>,
+    pub theta_2 : Arc<EOSParams>,
     /// θ3 - param for Walker model(SingleParameter)
-    pub theta_3 : Arc<EOSParams<f64>>, 
+    pub theta_3 : Arc<EOSParams>, 
     /// θ4 - param for Walker model(SingleParameter)
-    pub theta_4 : Arc<EOSParams<f64>>,
+    pub theta_4 : Arc<EOSParams>,
     /// deg1 - param for Walker model(SingleParameter)
-    pub deg_1 : Arc<EOSParams<f64>>,
+    pub deg_1 : Arc<EOSParams>,
     /// deg2 - param for Walker model(SingleParameter)
-    pub deg_2 : Arc<EOSParams<f64>>,
+    pub deg_2 : Arc<EOSParams>,
     /// deg3 - param for Walker model(SingleParameter)
-    pub deg_3 : Arc<EOSParams<f64>>,
+    pub deg_3 : Arc<EOSParams>,
     /// deg4 - param for Walker model(SingleParameter)
-    pub deg_4 : Arc<EOSParams<f64>>,
+    pub deg_4 : Arc<EOSParams>,
     /// reference state for the EOS model
     pub reference_state : Arc<ReferenceState>,
     /// group contributions
@@ -87,10 +87,10 @@ impl WalkerModel {
     /// Instance of the ``WalkerModel`` struct
     pub fn new(
         species : Arc<Vec<ComponentData>>, 
-        molec_weight : Arc<EOSParams<MolarMass>>, 
-        n_rot : Arc<EOSParams<f64>>, 
-        theta_values : Arc<Vec<EOSParams<f64>>>, 
-        deg_values : Arc<Vec<EOSParams<f64>>>, 
+        molec_weight : Arc<EOSParams>, 
+        n_rot : Arc<EOSParams>, 
+        theta_values : Arc<Vec<EOSParams>>, 
+        deg_values : Arc<Vec<EOSParams>>, 
         reference_state : Arc<ReferenceState>,
         eos_groups : Arc<EOSGroups>)
         -> Self {
