@@ -53,7 +53,7 @@ pub struct WalkerModel {
     /// reference state for the EOS model
     pub reference_state : Arc<ReferenceState>,
     /// group contributions
-    pub eos_groups : Arc<EOSGroups>
+    pub eos_groups : Arc<EOSGroupContributionParameters>
 
 }
 
@@ -92,7 +92,7 @@ impl WalkerModel {
         theta_values : Arc<Vec<EOSParams>>, 
         deg_values : Arc<Vec<EOSParams>>, 
         reference_state : Arc<ReferenceState>,
-        eos_groups : Arc<EOSGroups>)
+        eos_groups : Arc<EOSGroupContributionParameters>)
         -> Self {
             return WalkerModel { 
                 components: species, 
